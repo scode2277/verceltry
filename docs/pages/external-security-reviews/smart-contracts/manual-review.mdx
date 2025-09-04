@@ -64,33 +64,32 @@ Based on the structural and functional understanding the high level diagram can 
 <MermaidRenderer 
   id="staking-diagram"
   code={`classDiagram
-direction LR
-class Token {
-  +mint()
-  +burn()
-  +transfer()
-  +transferFrom()
-}
-class Staking {
-  +constructor()
-  +stake()
-  +unstake()
-  +getStakedAmount()
-  +getTotalStaked()
-}
-class Rewards {
-  +calculateRewards()
-  +claimRewards()
-  +initialize()
-}
-class Bridge {
-  +transferToChain()
-  +transferFromChain()
-}
-Token --> Staking: used in
-Staking --> Token
-Staking --> Rewards
-Staking --> Bridge : bridges token`} />
+    class Token {
+        +mint()
+        +burn()
+        +transfer()
+        +transferFrom()
+    }
+    class Staking {
+        +constructor()
+        +stake()
+        +unstake()
+        +getStakedAmount()
+        +getTotalStaked()
+    }
+    class Rewards {
+        +calculateRewards()
+        +claimRewards()
+        +initialize()
+    }
+    class Bridge {
+        +transferToChain()
+        +transferFromChain()
+    }
+    Token --> Staking : "used in"
+    Staking --> Token
+    Staking --> Rewards
+    Staking --> Bridge : "bridges token"`} />
 
 
 ## Manual review
