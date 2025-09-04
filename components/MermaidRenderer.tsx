@@ -10,18 +10,16 @@ interface MermaidRendererProps {
 
 const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code, id }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (!containerRef.current) return;
-
-    const renderDiagram = async () => {
+  
+    const renderMermaid = async () => {
       try {
-        // Initialize mermaid (optional if global config needed)
         mermaid.initialize({ startOnLoad: false });
-
-        // render returns { svg: string; bindFunctions: () => void }
-        const { svg } = await mermaid.render(id, code);
-
+  
+        const cleanCode = code.trim();
+        const { svg } = await mermaid.render(id, cleanCode);
+  
         if (containerRef.current) {
           containerRef.current.innerHTML = svg;
         }
@@ -32,8 +30,8 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code, id }) => {
         console.error(err);
       }
     };
-
-    renderDiagram();
+  
+    renderMermaid();
   }, [code, id]);
 
   return <div ref={containerRef} className="mermaid" />;
