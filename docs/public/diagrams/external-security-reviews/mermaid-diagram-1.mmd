@@ -1,0 +1,28 @@
+    classDiagram
+	direction LR
+	class Token {
+	  +mint()
+	  +burn()
+	  +transfer()
+	  +transferFrom()
+	}
+	class Staking {
+	  +constructor()
+	  +stake()
+	  +unstake()
+	  +getStakedAmount()
+	  +getTotalStaked()
+	}
+	class Rewards {
+	  +calculateRewards()
+	  +claimRewards()
+	  +initialize()
+	}
+	class Bridge {
+	  +transferToChain()
+	  +transferFromChain()
+	}
+	Token --> Staking: used in
+	Staking --> Token
+	Staking --> Rewards
+	Staking --> Bridge : bridges token

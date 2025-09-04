@@ -1,41 +1,24 @@
 #!/bin/bash
 set -e
 
-echo "Running Vercel prebuild for Vocs with manual Chromium..."
-
-# Ensure docs/pages exists
-mkdir -p docs/pages
+echo "Running Vercel prebuild for Vocs with Mermaid diagrams..."
 
 # Install dependencies
 npm install
 
-# Directory for browsers
-mkdir -p .playwright-browsers
+# Directory containing your .mmd files (with subfolders)
+INPUT_DIR="docs/public/diagrams"
 
-# Download Chromium *headless_shell* build (revision 1187)
-echo "Downloading Chromium headless_shell for Playwright..."
-curl -sSL https://playwright.azureedge.net/builds/chromium/1187/chromium-headless-shell-linux.zip -o chromium.zip
-
-# Extract and clean up
-unzip chromium.zip -d .playwright-browsers/
-rm chromium.zip
-
-# Create expected folder structure
-mkdir -p .playwright-browsers/chromium_headless_shell-1187
-mv .playwright-browsers/chrome-linux .playwright-browsers/chromium_headless_shell-1187/
-
-# Export Playwright browser path
-export PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers
-
-# Verify the binary exists
-ls -l .playwright-browsers/chromium_headless_shell-1187/chrome-linux/headless_shell || {
-  echo "❌ headless_shell binary not found!"
-  exit 1
-}
-
-npx playwright install-deps
+# Generate SVGs next to each .mmd file
+find "$INPUT_DIR" -name "*.mmd" | while read f; do
+  dir=$(dirname "$f")
+  filename=$(basename "$f" .mmd)
+  npx mmdc -i "$f" -o "$dir/$filename.svg"
+  echo "✅ Generated $dir/$filename.svg"
+done
 
 # Build the Vocs site
+echo "Building the docs site..."
 npm run docs:build
 
-echo "✅ Vocs build completed successfully!"
+echo "✅ Vercel build completed successfully!"

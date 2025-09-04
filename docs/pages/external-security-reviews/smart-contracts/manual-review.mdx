@@ -60,36 +60,7 @@ Based on the structural and functional understanding the high level diagram can 
     - There are many tools that can be used like Excalidraw, Miro, Lucidchart, Mermaid etc.  
     - High level structural example of staking diagram:  
 
-   ```mermaid
-    classDiagram
-	direction LR
-	class Token {
-	  +mint()
-	  +burn()
-	  +transfer()
-	  +transferFrom()
-	}
-	class Staking {
-	  +constructor()
-	  +stake()
-	  +unstake()
-	  +getStakedAmount()
-	  +getTotalStaked()
-	}
-	class Rewards {
-	  +calculateRewards()
-	  +claimRewards()
-	  +initialize()
-	}
-	class Bridge {
-	  +transferToChain()
-	  +transferFromChain()
-	}
-	Token --> Staking: used in
-	Staking --> Token
-	Staking --> Rewards
-	Staking --> Bridge : bridges token
-    ``` 
+   <img src="/public/diagrams/external-security-reviews/mermaid-diagram-1.svg" alt="Flow 3 Diagram" />
 
 ## Manual review
 
