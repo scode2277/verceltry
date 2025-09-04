@@ -10,6 +10,7 @@ contributors:
 ---
 
 import { TagList, AttributionList, TagProvider, TagFilter, ContributeFooter } from '../../../../components'
+import MermaidRenderer  from '../../../../components/MermaidRenderer'
 
 {/*TODO: contributor not showing */}
 <TagProvider>
@@ -60,8 +61,11 @@ Based on the structural and functional understanding the high level diagram can 
     - There are many tools that can be used like Excalidraw, Miro, Lucidchart, Mermaid etc.  
     - High level structural example of staking diagram:  
 
-   <img src="/public/diagrams/external-security-reviews/mermaid-diagram-1.svg" alt="Flow 3 Diagram" />
-
+   <MermaidRenderer
+        
+        code={""}
+        id="diagram1"
+    />
 ## Manual review
 
 1. **Understand the flow:**  
