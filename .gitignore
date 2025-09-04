@@ -1,0 +1,34 @@
+**/.DS_Store
+**/.DS_Store?
+**/.vscode
+**/.vscode?
+**/.obsidian
+**/.obsidian?
+**/.idea
+**/.idea?
+book
+bin
+*.code-workspace
+# Rust build artifacts
+**/target/
+**/*.rs.bk
+**/*.rmeta
+**/*.rlib
+Cargo.lock
+
+# Ignore contributors index file to prevent watch loops
+theme/contributors/contributorsindex.js
+theme/tags/tagsindex.js
+
+# Ignore claude-code installation
+claude-code
+@anthropic-ai/claude-code
+
+# Node.js dependencies
+node_modules/
+
+# Claude Code configuration
+CLAUDE.md
+
+# Build folder
+**/dist/

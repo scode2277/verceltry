@@ -1,0 +1,11 @@
+{
+    "buildCommand": "bash vercel_build.sh",
+    "outputDirectory": "docs/dist",
+    "redirects": [
+        {
+          "source": "/book",
+          "destination": "/",
+          "permanent": true
+        }
+      ]
+  }
