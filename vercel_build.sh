@@ -20,8 +20,9 @@ curl -sSL https://playwright.azureedge.net/builds/chromium/1187/chromium-headles
 unzip chromium.zip -d .playwright-browsers/
 rm chromium.zip
 
-# Rename/move to expected path
-mv .playwright-browsers/chromium-headless-shell-* .playwright-browsers/chromium_headless_shell-1187
+# Create expected folder structure
+mkdir -p .playwright-browsers/chromium_headless_shell-1187
+mv .playwright-browsers/chrome-linux .playwright-browsers/chromium_headless_shell-1187/
 
 # Export Playwright browser path
 export PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers
