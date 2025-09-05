@@ -1,5 +1,5 @@
 
-<img src="/docs/public/logo/frameworks-full.svg" height="100px"/>
+<img src="/docs/public/logo/frameworks-full.svg" height="80px"/>
 
 # Security Frameworks
 
