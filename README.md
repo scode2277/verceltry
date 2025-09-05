@@ -1,5 +1,5 @@
 
-<img src="/docs/public/logo/frameworks-full.svg"/>
+<img src="/docs/public/logo/frameworks-full.svg" height="100px"/>
 
 # Security Frameworks content repository
 
