@@ -44,23 +44,17 @@ Think of it as a **one-stop shop for Web3 security**: a high-level framework tha
 
 The Security Frameworks are published online in two versions:
 
-- 🌐 **Main (Stable Release)** – [Website following `main`](https://www.notion.so/README-25a914d0d4208063a71bd2c513d9cea6?pvs=21)
+- **Main**  – [Website following `main`](https://frameworks.securityalliance.org)
     - Contains **polished, reviewed, and production-ready content**.
-    - This is the recommended version for most readers and practitioners.
-- 🧪 **Develop (In Progress)** – [Website following `develop`](https://www.notion.so/README-25a914d0d4208063a71bd2c513d9cea6?pvs=21)
+- **Develop** – [Website following `develop`](https://frameworks.securityalliance.dev)
     - Contains **work-in-progress material**, drafts, and experimental updates.
-    - Useful if you want to follow the latest changes or contribute directly.
 
 Both versions are continuously updated, but only `main` reflects finalized, community-reviewed guidance.
 
 ## Contributing
 
-This project thrives on community involvement. We welcome contributions of all kinds:
+The Security Framework is an open and collaborative project. Whether you are part of the Security Alliance or not, we welcome your contributions! Help us to build the documentation and improve security in the ecosystem. If you'd like to join our effort, feel free to fix typos, contribute new sections, or propose enhancements.
 
-- 🛠️ Suggesting improvements or clarifications
-- 📝 Adding missing security topics
-- 🔍 Reporting errors, outdated info, or gaps
+Every contribution helps strengthen the resource and improve security practices across the ecosystem.
 
-See our Contributing Guide (or add a link if you have one) for details on how to get started.
-
-Your input helps ensure this framework remains relevant, practical, and accessible to everyone.
+See our Contributing Guide for details on how to get started.
