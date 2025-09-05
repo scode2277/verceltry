@@ -2,6 +2,8 @@
 <img src="/docs/public/logo/frameworks-full.svg" height="100px" />
 </div>
 
+---
+
 **Welcome to the official repository for Security Frameworks**—a curated collection of structured, community-driven security best practices maintained by the Security Alliance (SEAL). This repository powers a comprehensive, evolving security reference resource designed for practitioners and organizations to adopt, adapt, and contribute to.
 
 ## What Are the Security Frameworks?
