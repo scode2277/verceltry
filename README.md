@@ -6,8 +6,9 @@
 
 **Welcome to the official repository for Security Frameworks**—a curated collection of structured, community-driven security best practices maintained by the Security Alliance (SEAL). This repository powers a comprehensive, evolving security reference resource designed for practitioners and organizations to adopt, adapt, and contribute to.
 
->**This is a work in progress**.
->*Check out our [Contributing Guide](https://github.com/scode2277/verceltry/blob/main/CONTRIBUTING.md) to learn how you can help strengthen the resource and improve security practices across the ecosystem*
+> ⚠️ **This is a work in progress.**  
+> The Security Frameworks are continuously evolving as we add, refine, and review content.  
+> *Check out our [Contributing Guide](https://github.com/scode2277/verceltry/blob/main/CONTRIBUTING.md) to learn how you can help shape this resource — whether by fixing typos, suggesting improvements, or contributing new sections.*
 
 ## What Are the Security Frameworks?
 
@@ -60,4 +61,4 @@ The Security Framework is an open and collaborative project. Whether you are par
 
 Every contribution helps strengthen the resource and improve security practices across the ecosystem.
 
-See our Contributing Guide for details on how to get started.
+See our [Contributing Guide](https://github.com/scode2277/verceltry/blob/main/CONTRIBUTING.md) for details on how to get started.
