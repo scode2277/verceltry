@@ -1,0 +1,54 @@
+name: Upload MDX Images to S3
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  upload-images:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Find changed MDX files
+        run: |
+          git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.mdx$' > mdx_list.txt || true
+          echo "MDX files changed:"
+          cat mdx_list.txt
+
+      - name: Extract image paths and upload
+        run: |
+          # Find image references in MDX
+          > images.txt
+          while read mdx; do
+            grep -oP '(?<=\]\()\./.*\.(png|jpg|jpeg|gif)' "$mdx" >> images.txt || true
+            grep -oP '(?<=src=")\./.*\.(png|jpg|jpeg|gif)' "$mdx" >> images.txt || true
+          done < mdx_list.txt
+
+          sort -u images.txt -o images.txt
+
+          # Upload images to S3 and update MDX files
+          while read img; do
+            if [ -f "$img" ]; then
+              echo "Uploading $img..."
+              aws s3 cp "$img" "s3://${{ secrets.S3_BUCKET_NAME }}/$img" --acl public-read
+              sed -i "s|$img|https://${{ secrets.S3_BUCKET_NAME }}.s3.amazonaws.com/$img|g" $(cat mdx_list.txt)
+            fi
+          done < images.txt
+
+      - name: Commit updated MDX files
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git add $(cat mdx_list.txt)
+          git commit -m "Upload images to S3 and update MDX links" || echo "No changes to commit"
+          git push origin ${{ github.head_ref }}
