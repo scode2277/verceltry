@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -39,8 +41,8 @@ jobs:
           while read img; do
             if [ -f "$img" ]; then
               echo "Uploading $img..."
-              aws s3 cp "$img" "s3://${{ secrets.S3_BUCKET_NAME }}/$img" --acl public-read
-              sed -i "s|$img|https://${{ secrets.S3_BUCKET_NAME }}.s3.amazonaws.com/$img|g" $(cat mdx_list.txt)
+              aws s3 cp "$img" "s3://frameworks-try/$img" --acl public-read
+              sed -i "s|$img|https://frameworks-try.s3.amazonaws.com/$img|g" $(cat mdx_list.txt)
             fi
           done < images.txt
 
@@ -51,3 +53,6 @@ jobs:
           git add $(cat mdx_list.txt)
           git commit -m "Upload images to S3 and update MDX links" || echo "No changes to commit"
           git push origin ${{ github.ref_name }}
+
+      - name: Clean temporary files
+        run: rm -f images.txt mdx_list.txt
