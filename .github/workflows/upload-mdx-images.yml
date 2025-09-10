@@ -1,7 +1,9 @@
-name: Upload Media to S3 (Manual Trigger)
+name: Test Upload Media to S3
 
 on:
-  workflow_dispatch: {} # Manual trigger only
+  pull_request:
+    types: [opened, synchronize, reopened] # run on PR updates
+  workflow_dispatch: {} # allows manual trigger
 
 jobs:
   upload-media:
@@ -17,6 +19,14 @@ jobs:
         with:
           fetch-depth: 2
 
+      - name: Restrict to maintainers
+        run: |
+          ALLOWED_USERS="scode2277"
+          if ! echo "$ALLOWED_USERS" | grep -qw "$GITHUB_ACTOR"; then
+            echo "User $GITHUB_ACTOR is not allowed to run this workflow."
+            exit 78 # neutral exit to skip job
+          fi
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -24,13 +34,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-north-1
 
-      - name: Find media files to upload
+      - name: Find added media files
         id: find_files
         run: |
-          # Replace this with the folder where images are stored if needed
+          git fetch origin main
           git diff --name-only origin/main ${{ github.sha }} \
             | grep -Ei '\.(png|jpg|jpeg|gif|svg|mp4)$' > new_media.txt || true
-          echo "Media files to upload:"
+          echo "Files found for upload:"
           cat new_media.txt
 
       - name: Upload media files to S3
@@ -40,8 +50,8 @@ jobs:
           while read file; do
             if [ -f "$file" ]; then
               s3_path="${file#./}"
-              aws s3 cp "$file" "s3://frameworks-try/$s3_path" --acl public-read
-              UPLOADED_FILES+="- https://frameworks-try.s3.eu-north-1.amazonaws.com/$s3_path"$'\n'
+              aws s3 cp "$file" "s3://your-test-bucket/$s3_path" --acl public-read
+              UPLOADED_FILES+="- https://your-test-bucket.s3.eu-north-1.amazonaws.com/$s3_path"$'\n'
             fi
           done < new_media.txt
           echo "UPLOADED_FILES<<EOF" >> $GITHUB_ENV
@@ -62,7 +72,6 @@ jobs:
 
             Please update the links for these files in your project as needed.
             `;
-            // Only comment if the workflow was triggered from a PR
             if (context.payload.pull_request) {
               github.rest.issues.createComment({
                 issue_number: context.payload.pull_request.number,
