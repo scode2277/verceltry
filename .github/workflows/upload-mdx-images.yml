@@ -1,19 +1,19 @@
-name: Upload MDX Images to S3
+name: Upload Media on PR Merge
 
 on:
-  push:
+  pull_request:
+    types: [closed]  # triggers when PR is closed
     branches:
       - main
 
 jobs:
-  upload-images:
+  upload-media:
+    if: github.event.pull_request.merged == true  # only run if PR was merged
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -22,41 +22,37 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-north-1
 
-      - name: Find all MDX files
+      - name: Find newly added media files in the PR
         run: |
-          find . -type f -name "*.mdx" > mdx_list.txt
-          echo "MDX files found:"
-          cat mdx_list.txt
+          git fetch origin main
+          git diff --name-only origin/main ${{ github.sha }} | grep -Ei '\.(png|jpg|jpeg|gif|svg|mp4)$' > new_media.txt || true
+          echo "New media files added in this PR:"
+          cat new_media.txt
 
-      - name: Extract image paths and upload
+      - name: Upload new media to S3
         run: |
-          # Prepare image list
-          > images.txt
-          while read mdx; do
-            grep -oP '(?<=\]\()\./.*\.(png|jpg|jpeg|gif)' "$mdx" >> images.txt || true
-            grep -oP '(?<=src=")\./.*\.(png|jpg|jpeg|gif)' "$mdx" >> images.txt || true
-          done < mdx_list.txt
-
-          # Deduplicate
-          sort -u images.txt -o images.txt
-
-          # Upload images and update MDX links
-          while read img; do
-            if [ -f "$img" ]; then
-              s3_path="${img#./}"  # remove leading ./
-              echo "Uploading $img to s3://frameworks-try/$s3_path ..."
-              aws s3 cp "$img" "s3://frameworks-try/$s3_path" --acl public-read
-
-              # Replace relative path with S3 URL in all MDX files
-              while read mdx; do
-                sed -i "s|$img|https://frameworks-try.s3.eu-north-1.amazonaws.com/$s3_path|g" "$mdx"
-              done < mdx_list.txt
+          uploaded_files=""
+          while read file; do
+            if [ -f "$file" ]; then
+              s3_path="${file#./}"
+              echo "Uploading $file to s3://frameworks-try/$s3_path ..."
+              aws s3 cp "$file" "s3://frameworks-try/$s3_path" --acl public-read
+              uploaded_files="$uploaded_files\nhttps://frameworks-try.s3.eu-north-1.amazonaws.com/$s3_path"
             fi
-          done < images.txt
+          done < new_media.txt
+          echo -e "$uploaded_files" > uploaded_media_urls.txt
 
-      - name: Commit updated MDX files
-        run: |
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git add $(cat mdx_list.txt)
-          git commit -m "Upload images to S3 and update MDX links" || echo "No changes"
+      - name: Comment on the PR about updated media
+        if: steps.upload-media.outputs.uploaded_files != ''
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ⚠️ The following media files were uploaded to the S3 bucket. 
+            Please update their links in your PR or related files:
+
+            ${{ steps.upload-media.outputs.uploaded_files }}
+
+      - name: Clean temporary files
+        run: rm -f new_media.txt uploaded_media_urls.txt
