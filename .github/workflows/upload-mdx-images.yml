@@ -1,19 +1,21 @@
-name: Upload Media on PR Merge
+name: Upload Media to S3 (Manual Trigger)
 
 on:
-  pull_request:
-    types: [closed]  # triggers when PR is closed
-    branches:
-      - main
+  workflow_dispatch: {} # Manual trigger only
 
 jobs:
   upload-media:
-    if: github.event.pull_request.merged == true  # only run if PR was merged
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -22,37 +24,53 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-north-1
 
-      - name: Find newly added media files in the PR
+      - name: Find media files to upload
+        id: find_files
         run: |
-          git fetch origin main
-          git diff --name-only origin/main ${{ github.sha }} | grep -Ei '\.(png|jpg|jpeg|gif|svg|mp4)$' > new_media.txt || true
-          echo "New media files added in this PR:"
+          # Replace this with the folder where images are stored if needed
+          git diff --name-only origin/main ${{ github.sha }} \
+            | grep -Ei '\.(png|jpg|jpeg|gif|svg|mp4)$' > new_media.txt || true
+          echo "Media files to upload:"
           cat new_media.txt
 
-      - name: Upload new media to S3
+      - name: Upload media files to S3
+        id: upload_files
         run: |
-          uploaded_files=""
+          UPLOADED_FILES=""
           while read file; do
             if [ -f "$file" ]; then
               s3_path="${file#./}"
-              echo "Uploading $file to s3://frameworks-try/$s3_path ..."
               aws s3 cp "$file" "s3://frameworks-try/$s3_path" --acl public-read
-              uploaded_files="$uploaded_files\nhttps://frameworks-try.s3.eu-north-1.amazonaws.com/$s3_path"
+              UPLOADED_FILES+="- https://frameworks-try.s3.eu-north-1.amazonaws.com/$s3_path"$'\n'
             fi
           done < new_media.txt
-          echo -e "$uploaded_files" > uploaded_media_urls.txt
+          echo "UPLOADED_FILES<<EOF" >> $GITHUB_ENV
+          echo "$UPLOADED_FILES" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
-      - name: Comment on the PR about updated media
-        if: steps.upload-media.outputs.uploaded_files != ''
-        uses: peter-evans/create-or-update-comment@v3
+      - name: Comment on PR with uploaded media links
+        if: env.UPLOADED_FILES != ''
+        uses: actions/github-script@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            ⚠️ The following media files were uploaded to the S3 bucket. 
-            Please update their links in your PR or related files:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const files = `${{ env.UPLOADED_FILES }}`;
+            const body = `
+            ⚠️ The following media files were uploaded to the S3 bucket:
 
-            ${{ steps.upload-media.outputs.uploaded_files }}
+            ${files}
+
+            Please update the links for these files in your project as needed.
+            `;
+            // Only comment if the workflow was triggered from a PR
+            if (context.payload.pull_request) {
+              github.rest.issues.createComment({
+                issue_number: context.payload.pull_request.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+            }
 
       - name: Clean temporary files
-        run: rm -f new_media.txt uploaded_media_urls.txt
+        run: rm -f new_media.txt
