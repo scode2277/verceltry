@@ -50,8 +50,8 @@ jobs:
           while read file; do
             if [ -f "$file" ]; then
               s3_path="${file#./}"
-              aws s3 cp "$file" "s3://your-test-bucket/$s3_path" --acl public-read
-              UPLOADED_FILES+="- https://your-test-bucket.s3.eu-north-1.amazonaws.com/$s3_path"$'\n'
+              aws s3 cp "$file" "s3://frameworks-try/$s3_path" --acl public-read
+              UPLOADED_FILES+="- https://frameworks-try.s3.eu-north-1.amazonaws.com/$s3_path"$'\n'
             fi
           done < new_media.txt
           echo "UPLOADED_FILES<<EOF" >> $GITHUB_ENV
