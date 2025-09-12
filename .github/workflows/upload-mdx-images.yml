@@ -42,7 +42,7 @@ jobs:
           while read file; do
             if [ -f "$file" ]; then
               s3_path="${file#./}"
-              aws s3 cp "$file" "s3://frameworks-try/$s3_path" --acl public-read
+              aws s3 cp "$file" "s3://frameworks-try/$s3_path"
             fi
           done < new_media.txt
 
