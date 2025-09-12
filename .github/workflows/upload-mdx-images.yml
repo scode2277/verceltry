@@ -61,6 +61,28 @@ jobs:
                 body: `⚠️ The following media files were uploaded to the S3 bucket:\n\n${files}\nPlease update the links in your project as needed.`
               });
             }
+      - name: Comment on PR with uploaded media links
+        if: env.UPLOADED_FILES != ''
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const files = `${{ env.UPLOADED_FILES }}`;
+            if (files && context.payload.pull_request) {
+              const body = `
+              ⚠️ The following media files were uploaded to the S3 bucket:
+      
+              ${files}
+      
+              Please update the links in your project as needed.
+              `;
+              github.rest.issues.createComment({
+                issue_number: context.payload.pull_request.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body
+              });
+              }
 
 
       - name: Clean temporary files
