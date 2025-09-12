@@ -45,30 +45,23 @@ jobs:
               aws s3 cp "$file" "s3://frameworks-try/$s3_path"
             fi
           done < new_media.txt
-
+          
       - name: Comment on PR with uploaded media links
-        if: steps.find_files.outputs.files != ''
+        if: env.UPLOADED_FILES != ''
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const fs = require('fs');
-            const files = fs.readFileSync('new_media.txt', 'utf8').split('\n').filter(Boolean);
-            if (files.length > 0 && context.payload.pull_request) {
-              const body = `
-              ⚠️ The following media files were uploaded to the S3 bucket:
-
-              ${files.map(f => `- https://frameworks-try.s3.eu-north-1.amazonaws.com/${f}`).join('\n')}
-
-              Please update the links in your project as needed.
-              `;
+            const files = `${{ env.UPLOADED_FILES }}`;
+            if (files && context.payload.pull_request) {
               github.rest.issues.createComment({
                 issue_number: context.payload.pull_request.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body
+                body: `⚠️ The following media files were uploaded to the S3 bucket:\n\n${files}\nPlease update the links in your project as needed.`
               });
             }
+
 
       - name: Clean temporary files
         run: rm -f new_media.txt
