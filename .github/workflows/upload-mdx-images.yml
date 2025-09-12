@@ -1,7 +1,12 @@
-name: Upload Media to S3 (Manual Trigger)
+name: Upload Media to S3
 
 on:
-  workflow_dispatch: {} # Manual trigger only
+  pull_request:
+    branches:
+      - main
+      - develop
+    types: [opened, synchronize, reopened]
+  workflow_dispatch: {} # allows manual trigger
 
 jobs:
   upload-media:
@@ -12,8 +17,7 @@ jobs:
       issues: write
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 2
 
@@ -24,51 +28,45 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-north-1
 
-      - name: Find media files to upload
+      - name: Find added media files
         id: find_files
         run: |
-          # Replace this with the folder where images are stored if needed
+          git fetch origin main
           git diff --name-only origin/main ${{ github.sha }} \
             | grep -Ei '\.(png|jpg|jpeg|gif|svg|mp4)$' > new_media.txt || true
-          echo "Media files to upload:"
+          echo "Files found for upload:"
           cat new_media.txt
 
       - name: Upload media files to S3
-        id: upload_files
         run: |
-          UPLOADED_FILES=""
           while read file; do
             if [ -f "$file" ]; then
               s3_path="${file#./}"
               aws s3 cp "$file" "s3://frameworks-try/$s3_path" --acl public-read
-              UPLOADED_FILES+="- https://frameworks-try.s3.eu-north-1.amazonaws.com/$s3_path"$'\n'
             fi
           done < new_media.txt
-          echo "UPLOADED_FILES<<EOF" >> $GITHUB_ENV
-          echo "$UPLOADED_FILES" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
 
       - name: Comment on PR with uploaded media links
-        if: env.UPLOADED_FILES != ''
+        if: steps.find_files.outputs.files != ''
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const files = `${{ env.UPLOADED_FILES }}`;
-            const body = `
-            ⚠️ The following media files were uploaded to the S3 bucket:
+            const fs = require('fs');
+            const files = fs.readFileSync('new_media.txt', 'utf8').split('\n').filter(Boolean);
+            if (files.length > 0 && context.payload.pull_request) {
+              const body = `
+              ⚠️ The following media files were uploaded to the S3 bucket:
 
-            ${files}
+              ${files.map(f => `- https://frameworks-try.s3.eu-north-1.amazonaws.com/${f}`).join('\n')}
 
-            Please update the links for these files in your project as needed.
-            `;
-            // Only comment if the workflow was triggered from a PR
-            if (context.payload.pull_request) {
+              Please update the links in your project as needed.
+              `;
               github.rest.issues.createComment({
                 issue_number: context.payload.pull_request.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: body
+                body
               });
             }
 
