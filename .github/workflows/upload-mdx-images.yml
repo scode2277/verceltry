@@ -21,13 +21,6 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Restrict to maintainers
-        run: |
-          ALLOWED_USERS="scode2277"
-          if ! echo "$ALLOWED_USERS" | grep -qw "$GITHUB_ACTOR"; then
-            echo "User $GITHUB_ACTOR is not allowed to run this workflow."
-            exit 78
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -45,7 +38,6 @@ jobs:
           cat new_media.txt
 
       - name: Upload media files to S3
-        id: upload_files
         run: |
           while read file; do
             if [ -f "$file" ]; then
