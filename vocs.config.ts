@@ -1,8 +1,8 @@
 import { defineConfig } from 'vocs'
 
 const config = {
-   ttheme: {
-    default: 'dark'
+   theme: { 
+    colorScheme: 'dark'
   },
   banner: {
     content: '***This is a work in progress and not a release. We are looking for volunteers. See [Issues](https://github.com/security-alliance/frameworks/issues) and [Contribution](https://github.com/security-alliance/frameworks/blob/develop/docs/pages/contribute/contributing.mdx) to know how to collaborate.***',
