@@ -1,24 +1,9 @@
 import { defineConfig } from 'vocs'
 
 const config = {
-   theme: {
-    default: 'system'
+   ttheme: {
+    default: 'dark'
   },
-  head: [
-    [
-      'script',
-      {},
-      `
-      (() => {
-        const theme = localStorage.getItem('theme') || 'system';
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        if (theme === 'dark' || (theme === 'system' && prefersDark)) {
-          document.documentElement.classList.add('dark');
-        }
-      })();
-      `
-    ]
-  ],
   banner: {
     content: '***This is a work in progress and not a release. We are looking for volunteers. See [Issues](https://github.com/security-alliance/frameworks/issues) and [Contribution](https://github.com/security-alliance/frameworks/blob/develop/docs/pages/contribute/contributing.mdx) to know how to collaborate.***',
     height: '20px',
