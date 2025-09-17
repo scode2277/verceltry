@@ -2,8 +2,11 @@ import { defineConfig } from 'vocs'
 
 const config = {
    theme: { 
-    colorScheme: 'dark'
-  },
+    accentColor: {
+      light: 'white', 
+      dark: 'black', 
+    } 
+  }, 
   banner: {
     content: '***This is a work in progress and not a release. We are looking for volunteers. See [Issues](https://github.com/security-alliance/frameworks/issues) and [Contribution](https://github.com/security-alliance/frameworks/blob/develop/docs/pages/contribute/contributing.mdx) to know how to collaborate.***',
     height: '20px',
