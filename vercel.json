@@ -16,6 +16,16 @@
       "source": "/:section/",
       "destination": "/:section/overview",
       "permanent": true
+    },
+    {
+      "source": "/intro/",
+      "destination": "/intro/introduction",
+      "permanent": true
+    },
+    {
+      "source": "/contribute/",
+      "destination": "/contribute/contributing",
+      "permanent": true
     }
   ]
 }
