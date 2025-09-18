@@ -5,6 +5,16 @@ title: "Introduction"
 <html>
 <head>
   <meta httpEquiv="refresh" content="0; url=/intro/introduction" />
+  <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                const theme = localStorage.getItem("theme") || "dark";
+                document.documentElement.dataset.theme = theme;
+              })();
+            `
+          }}
+        />
 </head>
 <body>
   
