@@ -1,12 +1,50 @@
 import { defineConfig } from 'vocs'
 
 const config = {
-   theme: { 
-    accentColor: {
-      light: 'white', 
-      dark: 'black', 
-    } 
-  }, 
+   head: (
+  <>
+    <meta name="color-scheme" content="light dark" />
+
+    <script
+      dangerouslySetInnerHTML={{
+        __html: `
+          (function() {
+            try {
+              // key used in localStorage
+              var key = 'theme';
+
+              // get saved theme, if any
+              var saved = localStorage.getItem(key);
+
+              // detect system preference
+              var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+              // determine what theme to apply
+              var themeToApply;
+              if (saved === 'dark') {
+                themeToApply = 'dark';
+              } else if (saved === 'light') {
+                themeToApply = 'light';
+              } else {
+                // no saved preference, fallback to system
+                themeToApply = prefersDark ? 'dark' : 'light';
+              }
+
+              // apply class to html
+              if (themeToApply === 'dark') {
+                document.documentElement.classList.add('dark');
+              } else {
+                document.documentElement.classList.remove('dark');
+              }
+            } catch (e) {
+              console.error('theme init error', e);
+            }
+          })();
+        `
+      }}
+    />
+  </>
+), 
   banner: {
     content: '***This is a work in progress and not a release. We are looking for volunteers. See [Issues](https://github.com/security-alliance/frameworks/issues) and [Contribution](https://github.com/security-alliance/frameworks/blob/develop/docs/pages/contribute/contributing.mdx) to know how to collaborate.***',
     height: '20px',
