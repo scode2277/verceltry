@@ -1,17 +1,14 @@
 {
   "buildCommand": "bash vercel_build.sh",
   "outputDirectory": "docs/dist",
+  "rewrites": [
+    {
+      "source": "/intro",
+      "destination": "/intro/introduction"
+    }
+  ],
   "redirects": [
-    {
-      "source": "/book",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/intro/",
-      "destination": "/intro/introduction",
-      "permanent": true
-    },
+    
     {
       "source": "/contribute/",
       "destination": "/contribute/contributing",
