@@ -4,33 +4,37 @@ title: "Introduction"
 
 <html>
 <head>
-  <script>
-    (function() {
-      'use strict';
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const hasThemeClass = document.documentElement.classList.contains('dark') || document.documentElement.classList.contains('light');
-      
-      if (!hasThemeClass) {
-        const storedTheme = localStorage.getItem('vocs.theme');
-        const shouldBeDark = (storedTheme || (mediaQuery.matches ? 'dark' : 'light')) === 'dark';
-        
-        if (shouldBeDark) {
-          document.documentElement.classList.add('dark');
-        }
-        
-        // Listen for system theme changes only if no stored preference
-        if (!storedTheme) {
-          mediaQuery.addEventListener('change', ({ matches }) => {
-            if (matches) {
+  <script
+    dangerouslySetInnerHTML={{
+      __html: `
+        (function() {
+          'use strict';
+          const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+          const hasThemeClass = document.documentElement.classList.contains('dark') || document.documentElement.classList.contains('light');
+          
+          if (!hasThemeClass) {
+            const storedTheme = localStorage.getItem('vocs.theme');
+            const shouldBeDark = (storedTheme || (mediaQuery.matches ? 'dark' : 'light')) === 'dark';
+            
+            if (shouldBeDark) {
               document.documentElement.classList.add('dark');
-            } else {
-              document.documentElement.classList.remove('dark');
             }
-          });
-        }
-      }
-    })();
-  </script>
+            
+            // Listen for system theme changes only if no stored preference
+            if (!storedTheme) {
+              mediaQuery.addEventListener('change', ({ matches }) => {
+                if (matches) {
+                  document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
+                }
+              });
+            }
+          }
+        })();
+      `
+    }}
+  />
   <meta httpEquiv="refresh" content="0; url=/intro/introduction" />
 </head>
 <body>
