@@ -7,24 +7,16 @@
       "destination": "/intro/introduction"
     },
     {
-      "source": "/contribute/",
-      "destination": "/contribute/contributing",
-    },
-    {
-      "source": "/intro",
-      "destination": "/intro/introduction",
-    },
-    {
       "source": "/contribute",
-      "destination": "/contribute/contributing",
+      "destination": "/contribute/contributing"
     },
     {
       "source": "/:section",
-      "destination": "/:section/overview",
+      "destination": "/:section/overview"
     },
     {
       "source": "/:section/",
-      "destination": "/:section/overview",
+      "destination": "/:section/overview"
     }
   ]
 }
