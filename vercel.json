@@ -5,35 +5,26 @@
     {
       "source": "/intro",
       "destination": "/intro/introduction"
-    }
-  ],
-  "redirects": [
-    
+    },
     {
       "source": "/contribute/",
       "destination": "/contribute/contributing",
-      "permanent": true
     },
     {
       "source": "/intro",
       "destination": "/intro/introduction",
-      "permanent": true
     },
     {
       "source": "/contribute",
       "destination": "/contribute/contributing",
-      "permanent": true
     },
     {
       "source": "/:section",
       "destination": "/:section/overview",
-      "permanent": true
     },
     {
       "source": "/:section/",
       "destination": "/:section/overview",
-      "permanent": true
     }
-    
   ]
 }
