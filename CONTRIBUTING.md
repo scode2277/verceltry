@@ -1,44 +1,66 @@
-# Contribute to the Security Framework
+<!-- 
+This file is a duplicate of the contributing.mdx in docs/contribute. 
 
-The Security Framework is an open and collaborative project. Whether you are part of the Security Alliance or not, we welcome your contributions! Help us to build the documentation and improve security in the ecosystem.
+Both files contain the same content: the docs/config file is there to render the content on the website, 
+while this copy is needed to make it highlighted in the repository dashboard.
 
-This mdBook-style handbook is designed for easy collaboration and automatic deployment through continuous integration. If you'd like to join our effort, feel free to fix typos, contribute new sections, or propose enhancements.
+⚠️ If you make updates here, make sure to update the docs/contribute/contributing.mdx as well, and vice versa, 
+so both stay in sync.
+-->
 
-On each page, you will find a "Suggest an edit" button at the top-right corner. Clicking this sends you to the GitHub.com where you can suggest edits using their web interface.
+# **Contributing guidelines**
 
-If you want to contribute in a more organized manner, please read below.
+The Security Frameworks is an open and collaborative initiative. Whether you are part of the Security Alliance or not, we welcome your contributions! Help us build the documentation and improve security in the blockchain ecosystem.
 
-## Contributing
+This handbook is designed for easy collaboration and automatic deployment through continuous integration. If you'd like to join our effort, feel free to fix typos, contribute new sections, or propose enhancements.
 
-Before you start editing, adding or removing content, please read the [code of conduct](https://github.com/security-alliance/frameworks/blob/develop/CODE_OF_CONDUCT) and make yourself familiar with the overall structure.
+**Before contributing, please read our [Code of Conduct](https://github.com/security-alliance/frameworks/blob/develop/CODE_OF_CONDUCT.md)** to ensure that all interactions remain respectful, inclusive, and constructive.
 
-The source is hosted in github repository at [github.com/security-alliance/frameworks](https://github.com/security-alliance/frameworks).
+Join our [Discord](https://discord.gg/securityalliance) server, let others know what you are working on in the ‘frameworks-reviewers’ group channel, and collaborate with other contributors writing about related topics.
 
-The content of the Frameworks main website (.org) comes from the `main` branch, and when contributing to several frameworks, or generic changes, we would like you to open a PR into the `development` branch (.dev)
+## Live versions
 
-> ⚠️ Please sign and verify every commit.
+The source code for the Security Frameworks is hosted on GitHub: [github.com/security-alliance/frameworks](https://github.com/security-alliance/frameworks).
 
-Once a new update is warranted, the content from `development` is merged into `main`.
+- The **main branch** powers the stable Frameworks website (https://frameworks.securityalliance.org/) with reviewed and finalized content.
+- The **development branch** (https://frameworks.securityalliance.dev/) contains ongoing updates, new sections, and draft content.
 
-### Framework-specific branches and Stewards
+When contributing, **please submit your Pull Requests to the development branch**. Once changes are reviewed and approved, they will be merged into the **main branch** for publication on the stable site.
 
-To understand how to contribute, follow this process:
+## Ways to contribute
 
-1. **Check for a framework-specific branch**: First, check if there's a [Steward](./stewards) for the specific framework you're interested in, and reach out. We usually have separate branches pre-develop for frameworks with stewards. Their naming convention is `fw_framework_name`, for example `fw_opsec`, `fw_community_mgmt` - the naming should be intuitive. For more information about stewards and their responsibilities, see the [Stewards](./stewards) section.
+There are several ways to contribute, depending on your preference and the scope of your changes. First, check existing PRs or branches to make sure your work has not been previously ****submitted**.**
 
-2. **Fork the right branch**: Ideally, you will fork these framework-specific branches, since they will probably have more updated information than what's available in the develop branch.
+### 1. Quick edits
 
-3. **Submit PR to framework specific branch**: Once you have your suggestions, submit a PR and let the steward or maintainer know you're ready for a review. Feel free to assign reviewers as well. Once submited, you'll be able to see the deployment through Vercel's automation and make any final fixes.
+- Use the **“Contribute today!”** button at the bottom of any page
+- Make fixes, formatting, and clarifications, favoring major modifications over just a few grammar mistakes
+- Changes go through GitHub’s web interface without requiring local setup
 
-4. **Submit PR to develop**: After reviews, a steward, a maintainer, or even yourself can submit a PR from the framework specific branch to the develop branch.
+### 2. Add a new section or expand an existing one
 
-5. **Become a steward**: If there's no specific branch created, then that framework is still "headless," which means you can become its steward! See more in the [Stewards](./stewards) section.
+All contributions should follow this workflow:
 
-### Development Environment Setup
+1. **Fork the repository** to your own GitHub account.
+2. **Follow the `template.mdx` page** when creating or expanding content. It contains pre-defined components and structure required for consistency in MDX files.
+3. **Make your changes** in MDX (typos, improvements, or new content) on your fork.
+4. **Open a Pull Request (PR) against the `develop` branch** of this repository. Once submitted, you can see the deployment through Vercel’s automation and make any final adjustments.
+5. **Notify reviewers** by tagging a steward or maintainer, requesting reviews directly in your PR.
+6. Additionally, you can paste your PR and/or potential associated issues to the `framework-reviewers` Discord channel.
+7. Once reviewed and approved, your changes will be merged into `develop`.
+8. Don't forget to add yourself to the YAML header of the file you're modifying, given that is the way we provide attribution. You should also create your profile inside the contributors list, at `docs/config/contributors.json`.
+9. Periodically, reviewed content from `develop` is merged into `main` for the stable site.
+
+If you’re interested in a framework that doesn’t currently have an active steward, you can **become one yourself**. See the [Stewards guide](/docs/pages/contribute
+/stewards) for details on responsibilities and how to get started.
+
+**⚠️ Please sign and verify all commits.** (If you have unsigned commits, follow the “Fixing Unsigned Commits” section below to update them)
+
+## Development environment setup
 
 Choose the development approach that works best for you:
 
-#### Option A: DevContainer with VSCode (Recommended)
+### Option A: DevContainer with VSCode
 
 The easiest way to get started is using our pre-configured devcontainer with VSCode:
 
@@ -47,158 +69,232 @@ The easiest way to get started is using our pre-configured devcontainer with VSC
 3. **Reopen in container**: Command Palette (Ctrl+Shift+P) → "Dev Containers: Reopen in Container"
 4. **Start developing**: All tools are pre-installed and ready to use
 
-#### Option B: DevContainer CLI Only (No VSCode Required)
+### Option B: DevContainer CLI Only (No VSCode Required)
+Since you won't require extensions for the initiative to work, you can just create a devcontainer using the CLI and access it through whatever mean you think suits you best.
 
-**Using DevContainer CLI:**
+**Using DevContainer CLI (Recommended):**
+
 - Install [DevContainer CLI](https://github.com/devcontainers/cli)
+
 ```bash
-git clone https://github.com/security-alliance/frameworks.git
+git clone <https://github.com/security-alliance/frameworks.git>
 cd frameworks && git checkout develop
 devcontainer up --workspace-folder .
 devcontainer exec --workspace-folder . bash
 # Get the IP address of the container, by running `hostname -I | awk '{print $1}'`. Should be printed automatically in the terminal after the creation as well
-# Inside container: just serve
-# Access the mdBook at http://<IP>:3000
+# Inside container: npx just serve
+# Access the docs at http://<IP>:5173
+
 ```
 
-#### Option C: Local Installation
+### Option C: Local installation
 
 If you prefer to install dependencies locally on your machine:
 
 **Prerequisites:**
-- [Rust/cargo](https://www.rust-lang.org/tools/install) (For building/serving mdBook)
+
+- Node.js (v18 or later) and npm (for running Vocs locally)
 - [markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2) (For linting markdown files)
-- [GNU Aspell](https://sourceforge.net/projects/aspell/) (For spell checking) - Note: For macOs you can use [Homebrew](https://brew.sh/) to install aspell. Just run `brew install aspell`.
-- [just](https://github.com/casey/just) (For running commands)
+- [GNU Aspell](https://sourceforge.net/projects/aspell/) (For spell checking) - Note: For macOS you can use [Homebrew](https://brew.sh/) to install aspell. Just run `brew install aspell`.
 - [Docker](https://docs.docker.com/get-docker/) (Optional: For running the devcontainer)
 - [GitHub CLI](https://cli.github.com/) (Optional: For using `gh` to interact with GitHub)
 
 **Setup:**
+
 1. Install all prerequisites listed above
 2. Clone the repository:
-   ```bash
-   git clone https://github.com/security-alliance/frameworks.git
-   cd frameworks && git checkout develop
-   ```
-3. Start the development server:
-   ```bash
-   just serve
-   ```
+    
+    ```bash
+    git clone <https://github.com/security-alliance/frameworks.git>
+    cd frameworks && git checkout develop
+    ```
+    
+3. **Install Node.js dependencies:**
 
+    ```bash
+    npm install
+    ```
 
+4. Start the local development server
+
+    ```bash
+    npx just serve
+    ```
 
 **(Optional) Authenticate with GitHub CLI**: The GitHub CLI (`gh`) is already preinstalled in the devcontainer. You can authenticate by running `gh auth login` in the terminal, making it easy to interact with GitHub directly from your development environment.
 
-### Local Development with mdBook
+# Fixing unsigned commits
 
-If you want to locally experiment with mdBook, you can run `just serve` which will automatically run mdBook when installed, serving the project for local viewing.
+If you accidentally made unsigned commits in your fork, you’ll need to rewrite them so they show as **Verified** before opening a PR.
 
-### Handling the Summary
+## 1. Rebase your recent commits
 
-Because of how we handle the `.org` and `.dev` domains in different branches, the main outline in `src/SUMMARY.md` is generated on the fly, based on `config/SUMMARY.develop|main`. You'll notice both differ - in `.org` we only publish reviewed frameworks, while in `.dev` we include most everything.
+- Understand how many commits you have to fix
+- Run this command, replacing `N` with the number of commits to go back (starting from the latest one):
 
-If you need to modify the outline for a framework, please make sure to update it accordingly in `config/SUMMARY.develop`.
+```bash
+git rebase -i HEAD~N
+```
 
-You may explore existing issues or open a new one for missing content, although a PR is preferred. If you identify missing or unfinished content, feel free to open a PR. First, check existing PRs or branches to make sure your work is not redundant.
+---
 
-### Attribution and Tags
+## 2. Mark commits to fix
 
-Most pages have tags below the heading and a way to add attribution and filtering.
+In the editor that opens:
 
-#### Page Tags
+- Change `pick` → `edit` for each unsigned commit.
+- Save and exit.
 
-Tags like "Community Manager", "SRE", etc. help categorize content and make it discoverable. To add tags to your page, include them in the frontmatter:
+---
 
-```markdown
+## 3. Re-sign each commit
+
+For each commit you’re editing:
+
+```bash
+git commit --amend -S --no-edit
+git rebase --continue
+```
+
+Repeat until all commits are re-signed.
+
+---
+
+## 4. Push your changes
+
+Since history was rewritten, you need to **force-push**:
+
+```bash
+git push --force
+```
+
+---
+
+## 5. Verify
+
+Check locally:
+
+```bash
+git log --show-signature
+```
+
+Or look at your branch on GitHub — commits should show a green **Verified** badge.
+
+## Contributor tasks beyond content changes
+
+When contributing to the Security Frameworks, there are several additional responsibilities to ensure your updates integrate smoothly into the site and maintain proper structure:
+
+### 1. Page tags
+
+- Assign appropriate tags at the top of your pages in the frontmatter to help categorize content by role, topic, or skill level:
+
+```yaml
 ---
 tags:
   - Engineer/Developer
   - Security Specialist
-  - Devops
-  - SRE
 ---
+
 ```
 
-Tags are currently in an exploratory phase. They are displayed at the top of each page and are also used for filtering and navigation throughout the site.
+- Proper tagging makes your contribution discoverable and filterable on the site.
 
-#### Attribution
+### 2. Contributors metadata
 
-Contributors are managed through a centralized system:
+- Add yourself and other relevant contributors to the page frontmatter:
 
-1. There's a contributor 'database' at `src/config/contributors.json`, where you add contributors or get their information from.
-
-2. The file `src/config/using-contributors.md` contains all the information needed to understand how to add them to your pages.
-
-To add contributors to a page, you can use frontmatter as shown in the using-contributors guide:
-
-```markdown
+```yaml
 ---
-title: Your Page Title
 contributors:
   - role: wrote
-    users: [mattaereal, charlie_dev]
+    users: [your-github-username]
   - role: reviewed
-    users: [fredriksvantes, zedt3ster]
+    users: [reviewer1, reviewer2]
 ---
+
 ```
 
-### Structure and collaboration
+- Contributors are **managed centrally**:
+    1. **Contributor database:** `docs/pages/config/contributors.json`
+    2. **Usage guide:** `docs/pages/config/using-contributors.mdx`
+- This helps track contributions and ensures proper attribution for edits and reviews.
 
-The book is supposed to cover all important parts of security for web3 projects.
-For contributors, we recommend focusing on specific topics contained in corresponding pages. It's best to own a single topic and work out all the details. Create a new page and add the category to the sidebar if it's not there yet. Join the [discord server](https://discord.gg/securityalliance), let others know what you are working on in the group channel and collaborate with other contributors writing about related topics. If you are working with multiple people on a significant piece of content, you can have a dedicated branch in the repo for easier coordination.
+### 3. Sidebar / Navigation
+
+Because of how we handle the `.org` and `.dev` domains in different branches, when contributing **new pages** you must also **update `vocs.config.ts`** so that the page appears in the site’s sidebar. For content still in review, remember to set `dev: true`.
+
+Example of a category with multiple pages:
+
+```tsx
+{
+  text: 'Monitoring',       // Category name visible in the sidebar
+  collapsed: false,
+  dev: true,                // Indicates this category is in development
+  items: [
+    { text: 'Overview', link: '/monitoring/README', dev: true },  // Example page
+    { text: 'Guidelines', link: '/monitoring/guidelines', dev: true },
+    { text: 'Thresholds', link: '/monitoring/thresholds', dev: true },
+  ]
+},
+
+```
+
+This ensures that new content appears correctly in the site’s navigation for readers on the `.dev` site while staying hidden from the stable `.org` site until ready.
 
 ## Style guide
 
-Wiki pages follow standard [Markdown](https://rust-lang.github.io/mdBook/format/markdown.html) with some extensions by [mdBook](https://rust-lang.github.io/mdBook/format/markdown.html).
+Wiki pages follow standard MDX.
 
-The audience of this wiki is technical and the content should reflect that. There are many guides on technical and documentation writing you can learn from, for example you can check [this lecture](https://www.youtube.com/watch?v=vtIzMaLkCaM) to get started.
+The audience of this wiki is technical, and the content should reflect that. There are many guides on technical and documentation writing you can learn from, for example, you can check [this lecture](https://www.youtube.com/watch?v=vtIzMaLkCaM) to get started.
 
-Here are main guidelines to follow when writing this wiki:
+### Writing guidelines
 
-- Write in an objective, clear and explanatory tone
-- Avoid unnecessary simplifications, describe the technical reality
-- Avoid using too long and complex sentences or paragraphs
-  - Use concise and clear statements
-  - Break down your text using block-quotes, bullet points or images
+- Write in an objective, explanatory tone; avoid unnecessary simplifications.
+- Use concise sentences and break down complex ideas with bullet points, tables, images, or block-quotes.
 - Always link your resources and verify them
-- Use bullet points or tables for topics which require enumerating
-- Highlight keywords to support scanning and skimming through the article
-- Provide visualizations to explain the topic better
-- When using acronyms or a technical jargon, make sure to introduce it first
-- Web3 is changing fast, write the content to be as much future proof as possible
-- Don't use LLMs to generate the text
-  - We don't accept texts fully generated by AI, however we recommend using it to fix grammar or phrasing
-- Consider creating tutorials and hands-on guides documenting technical steps
-- Add recommended reading at the top, point to topics which are dependencies of yours
+- Introduce acronyms and technical jargon before using them.
+- Web3 changes fast, write the content to be as future-proof as possible
+- Do **not** submit content entirely generated by AI; however, we recommend using it to fix grammar or phrasing
+- Consider tutorials or hands-on guides for practical steps.
+- Use visualizations (mermaid, diagrams, tables) to clarify concepts.
+- Add recommended reading or dependencies at the top of a page if relevant.
+- Focus on delivering credible, formal, technical content without unnecessary high-level introductions; use examples, comparisons, or anecdotes to clarify complex topics.
 - You can use mermaid diagrams for visualizations
-
-Goal is to produce a credible neutral text which is formal, well-structured, and maintains a clear progression of ideas. The content should be purely technical and shouldn't waste space on introducing high level/well known concepts. Introductory topics are necessary and can use comparisons, historical anecdotes, and concrete examples to make complex concepts more accessible.
 
 ### Content standardization
 
-The wiki uses American English over British spelling. Terminology, capitalization and nomenclature should match across all pages. Use [Ethereum.org guide](https://ethereum.org/contributing/style-guide/content-standardization) for the reference.
+- Use **American English** consistently.
+- Follow consistent terminology, capitalization, and nomenclature (see [Ethereum.org style guide](https://ethereum.org/contributing/style-guide/content-standardization)).
+- Usage of images and visualizations is encouraged. If you are using an image created by a third party, make sure its license allows it and provide a link to the original. For creating your own visualizations, we suggest [excalidraw.com](https://github.com/excalidraw/excalidraw).
+- Feel free to use [emojis](https://docsify.js.org/#/emoji?id=emoji) or [icons](https://icongr.am/fontawesome) where it fits, for example in block-quotes.
 
-Usage of images and visualizations is encouraged. If you are using an image created by a third party, make sure its license allows it and provide link to the original. For creating your own visualizations, we suggest [excalidraw.com](https://github.com/excalidraw/excalidraw).
+### Visual representation / drawings
+Like GitHub, we also support Mermaid!
 
-Feel free to use [emojis](https://docsify.js.org/#/emoji?id=emoji) or [icons](https://icongr.am/fontawesome) where it fits, for example in block-quotes.
+You can use codeblocks using the `mermaid` keyword, and you can create beautiful graphical representations.
+There's a [playground](https://www.mermaidchart.com/play#pako:eNqrVkrOT0lVslIqyExVKMksyUlVCM9ILFEIy89JSc3NLypRSMlPLc5TL1HISCxLtY_JU4CBGCW3IE9XP5fgGCUFKwUjVBlHX0-fSLCEMYqEn3-wK1jYxDQmT6kWAEyMIfc) where you can jump straight to draw!
+
+```mermaid
+pie title What Voldemort doesn't have?
+         "FRIENDS" : 2
+         "FAMILY" : 3
+         "NOSE" : 45
+```
 
 ### Linking resources
 
-When adding an external link, you can use it directly in the text or on the bottom of the page in "Resources" section.
-
-When linking resources use descriptive names, such as [inevitableeth.com](https://inevitableeth.com/) instead of generic phrases like [this wiki](https://inevitableeth.com/).
-
-Don't overwhelm reader with too many resources within the text.
-
-When linking a page within this framework, use a relative path and if it references specific topic within the page, use a link to heading IDs.
-
-For other important links, add a section on the bottom of the page with list of resources. Resources should have a name or short description with a link and alternative link to its archived mirror. We strongly suggest adding a link to the latest snapshot from archive.org.
+- Prefer descriptive names for external links (e.g., `inevitableeth.com` instead of “this wiki”).
+- Avoid overwhelming readers with too many inline links; consider a **Resources** section at the bottom.
+- Use relative paths for internal links and heading IDs for specific sections.
+- Provide archived mirrors or snapshots for important external references.
 
 ### In-page notices
 
-We use block-quote notices at the top of the page to provide readers with appropriate context regarding the content of the page.
+- Use block-quote notices at the top of pages for context.
+- **Incomplete pages** should include a stub notice:
 
-#### Incomplete pages
+> ⚠️ This article is still in progress. Help the framework by contributing and expanding it.
+> 
 
 Pages with minimal content which need more work to cover the topic need to include a notice:
 
@@ -206,10 +302,8 @@ Pages with minimal content which need more work to cover the topic need to inclu
 
 ## Anything else?
 
-This page is also opened for contributors! Suggest improvements to our style and guidelines in the github repo.
+This page is also open for contributions! Suggest improvements to our style and guidelines in the github repo.
 
 ## About this page
 
-Originally based from the [Ethereum Protocol Fellows](https://github.com/eth-protocol-fellows/protocol-studies)
-
----
+Originally inspired by the [Ethereum Protocol Fellows](https://github.com/eth-protocol-fellows/protocol-studies)
