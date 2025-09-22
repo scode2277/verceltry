@@ -33,23 +33,6 @@
 }
 
 :root {
-    color-scheme: dark;
+    color-scheme: dark !important;
 }
 
-/* Override any other styles that might cause flashing */
-
-
-/* Default to system preference, but allow override */
-:root:not(.dark) {
-    color-scheme: light;
-}
-
-:root.dark {
-    color-scheme: dark;
-}
-
-/* Ensure body also has the right colors */
-html, body {
-    background-color: inherit;
-    color: inherit;
-}
