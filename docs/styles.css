@@ -35,15 +35,10 @@
 :root {
     color-scheme: light dark;
     /* Force dark mode by default to prevent flashing */
-    background-color: #0a0a0a !important;
-    color: #ffffff !important;
 }
 
 /* Override any other styles that might cause flashing */
-* {
-    background-color: inherit !important;
-    color: inherit !important;
-}
+
 
 /* Default to system preference, but allow override */
 :root:not(.dark) {
@@ -54,7 +49,6 @@
 
 :root.dark {
     color-scheme: dark;
-    background-color: #0a0a0a;
     color: #ffffff;
 }
 
