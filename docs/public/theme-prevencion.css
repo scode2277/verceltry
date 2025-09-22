@@ -1,20 +1,21 @@
 /* Prevent theme flashing by setting initial styles */
 :root {
+  
+  --vocs-color_background: #0f172a;
+  --vocs-color_backgroundSecondary: #1e293b;
+  --vocs-color_border: #334155;
+  --vocs-color_text: #f1f5f9;
+  --vocs-color_textSecondary: #94a3b8;
+}
+
+/* Dark theme styles */
+.light {
   /* Default to light theme */
   --vocs-color_background: #ffffff;
   --vocs-color_backgroundSecondary: #f8fafc;
   --vocs-color_border: #e2e8f0;
   --vocs-color_text: #1e293b;
   --vocs-color_textSecondary: #64748b;
-}
-
-/* Dark theme styles */
-.dark {
-  --vocs-color_background: #0f172a;
-  --vocs-color_backgroundSecondary: #1e293b;
-  --vocs-color_border: #334155;
-  --vocs-color_text: #f1f5f9;
-  --vocs-color_textSecondary: #94a3b8;
 }
 
 /* Ensure smooth transitions */
