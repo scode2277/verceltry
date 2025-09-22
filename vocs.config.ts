@@ -8,14 +8,6 @@ const config = {
     textColor: 'white',
     dismissable: false
   },
-  redirects: [
-    { from: '/intro/', to: '/intro/introduction' },
-    { from: '/contribute/', to: '/contribute/contributing' },
-    { from: '/intro', to: '/intro/introduction' },
-    { from: '/contribute', to: '/contribute/contributing' },
-    { from: '/:section', to: '/:section/overview' },
-    { from: '/:section/', to: '/:section/overview' }
-  ],
   title: 'Security Frameworks by SEAL',
   description: 'Comprehensive security framework documentation for Web3 projects and blockchain security best practices.',
   logoUrl: '/logo/frameworks-full.svg',
