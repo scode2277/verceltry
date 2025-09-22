@@ -11,3 +11,21 @@ title: "Introduction"
   
 </body>
 </html>
+
+import { useEffect } from "react";
+
+export default function RedirectPage() {
+  useEffect(() => {
+    const path = window.location.pathname;
+
+    if (path === "/intro" || path === "/intro/") {
+      window.location.replace("/intro/introduction");
+    } else if (path === "/contribute" || path === "/contribute/") {
+      window.location.replace("/contribute/contributing");
+    } else {
+      window.location.replace(`${path.replace(/\/$/, "")}/overview`);
+    }
+  }, []);
+
+  return null;
+}
