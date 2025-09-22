@@ -1,6 +1,39 @@
 import { defineConfig } from 'vocs'
+import { createElement } from 'react'
 
 const config = {
+  head: createElement('script', {
+    dangerouslySetInnerHTML: {
+      __html: `
+        // IMMEDIATE theme detection - runs before any other scripts
+        (function() {
+          // Check if we're in browser
+          if (typeof window === 'undefined') return;
+          
+          // Get system preference immediately
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const storedTheme = localStorage.getItem('vocs.theme');
+          
+          // Use stored theme if available, otherwise use system preference
+          const theme = storedTheme || (prefersDark ? 'dark' : 'light');
+          
+          // Apply theme immediately to prevent flashing
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.documentElement.style.colorScheme = 'dark';
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.style.colorScheme = 'light';
+          }
+          
+          // Store the theme if not already stored
+          if (!storedTheme) {
+            localStorage.setItem('vocs.theme', theme);
+          }
+        })();
+      `
+    }
+  }),
   banner: {
     content: '***This is a work in progress and not a release. We are looking for volunteers. See [Issues](https://github.com/security-alliance/frameworks/issues) and [Contribution](https://github.com/security-alliance/frameworks/blob/develop/docs/pages/contribute/contributing.mdx) to know how to collaborate.***',
     height: '30px',

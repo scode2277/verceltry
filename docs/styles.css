@@ -32,6 +32,3 @@
     color: #060606;
 }
 
-:root:not(.dark) {
-    color-scheme: dark; /* This sets the default to dark */
-  }
