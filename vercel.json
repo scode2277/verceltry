@@ -1,22 +1,11 @@
 {
   "buildCommand": "bash vercel_build.sh",
   "outputDirectory": "docs/dist",
-  "rewrites": [
+  "redirects": [
     {
-      "source": "/intro",
-      "destination": "/intro/introduction"
-    },
-    {
-      "source": "/contribute",
-      "destination": "/contribute/contributing"
-    },
-    {
-      "source": "/:section",
-      "destination": "/:section/overview"
-    },
-    {
-      "source": "/:section/",
-      "destination": "/:section/overview"
+      "source": "/",
+      "destination": "/intro/introduction",
+      "permanent": true
     }
   ]
 }
