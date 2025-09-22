@@ -6,8 +6,9 @@ const config = {
     dangerouslySetInnerHTML: {
       __html: `
         // IMMEDIATE theme detection - runs before any other scripts
-        console.log('Theme script running...');
+        
         (function() {
+          console.log('Theme script running...');
           // Check if we're in browser
           if (typeof window === 'undefined') {
             console.log('Not in browser, skipping');
