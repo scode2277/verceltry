@@ -4,33 +4,27 @@
   "redirects": [
     {
       "source": "/intro/",
-      "destination": "/intro/introduction",
-      "permanent": true
+      "destination": "/intro/introduction"
     },
     {
       "source": "/contribute/",
-      "destination": "/contribute/contributing",
-      "permanent": true
+      "destination": "/contribute/contributing"
     },
     {
       "source": "/intro",
-      "destination": "/intro/introduction",
-      "permanent": true
+      "destination": "/intro/introduction"
     },
     {
       "source": "/contribute",
-      "destination": "/contribute/contributing",
-      "permanent": true
+      "destination": "/contribute/contributing"
     },
     {
       "source": "/:section",
-      "destination": "/:section/overview",
-      "permanent": true
+      "destination": "/:section/overview"
     },
     {
       "source": "/:section/",
-      "destination": "/:section/overview",
-      "permanent": true
+      "destination": "/:section/overview"
     }
   ]
 }
