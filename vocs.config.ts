@@ -6,29 +6,43 @@ const config = {
     dangerouslySetInnerHTML: {
       __html: `
         // IMMEDIATE theme detection - runs before any other scripts
+        console.log('Theme script running...');
         (function() {
           // Check if we're in browser
-          if (typeof window === 'undefined') return;
+          if (typeof window === 'undefined') {
+            console.log('Not in browser, skipping');
+            return;
+          }
+          
+          console.log('In browser, detecting theme...');
           
           // Get system preference immediately
           const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
           const storedTheme = localStorage.getItem('vocs.theme');
           
+          console.log('System prefers dark:', prefersDark);
+          console.log('Stored theme:', storedTheme);
+          
           // Use stored theme if available, otherwise use system preference
           const theme = storedTheme || (prefersDark ? 'dark' : 'light');
+          
+          console.log('Final theme:', theme);
           
           // Apply theme immediately to prevent flashing
           if (theme === 'dark') {
             document.documentElement.classList.add('dark');
             document.documentElement.style.colorScheme = 'dark';
+            console.log('Applied dark theme');
           } else {
             document.documentElement.classList.remove('dark');
             document.documentElement.style.colorScheme = 'light';
+            console.log('Applied light theme');
           }
           
           // Store the theme if not already stored
           if (!storedTheme) {
             localStorage.setItem('vocs.theme', theme);
+            console.log('Stored theme:', theme);
           }
         })();
       `
