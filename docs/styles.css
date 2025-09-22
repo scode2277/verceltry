@@ -32,7 +32,6 @@
     color: #060606;
 }
 
-html {
-    color-scheme: dark;
-    /* sets preferred colors immediately */
-}
+:root {
+    color-scheme: dark; /* This sets the default to dark */
+  }
