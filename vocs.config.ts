@@ -3,14 +3,22 @@ import { defineConfig } from 'vocs'
 const config = {
   banner: {
     content: '***This is a work in progress and not a release. We are looking for volunteers. See [Issues](https://github.com/security-alliance/frameworks/issues) and [Contribution](https://github.com/security-alliance/frameworks/blob/develop/docs/pages/contribute/contributing.mdx) to know how to collaborate.***',
-    height: '20px',
+    height: '30px',
     backgroundColor: '#8b5cf6',
     textColor: 'white',
     dismissable: false
   },
+  redirects: [
+    { from: '/intro/', to: '/intro/introduction' },
+    { from: '/contribute/', to: '/contribute/contributing' },
+    { from: '/intro', to: '/intro/introduction' },
+    { from: '/contribute', to: '/contribute/contributing' },
+    { from: '/:section', to: '/:section/overview' },
+    { from: '/:section/', to: '/:section/overview' }
+  ],
   title: 'Security Frameworks by SEAL',
   description: 'Comprehensive security framework documentation for Web3 projects and blockchain security best practices.',
-  logoUrl: '/logo/frameworks-full-circle.svg',
+  logoUrl: '/logo/frameworks-full.svg',
   iconUrl: '/logo/favicon.svg',
   sidebar: [
     {
@@ -30,7 +38,7 @@ const config = {
           text: 'Community Management',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/community-management/README' },
+            { text: 'Overview', link: '/community-management/overview' },
             { text: 'Discord', link: '/community-management/discord' },
             { text: 'Twitter', link: '/community-management/twitter' },
             { text: 'Telegram', link: '/community-management/telegram' },
@@ -41,7 +49,7 @@ const config = {
           text: 'Awareness',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/awareness/README' },
+            { text: 'Overview', link: '/awareness/overview' },
             { text: 'Core Awareness Principles', link: '/awareness/core-awareness-principles' },
             { text: 'Understanding Threat Vectors', link: '/awareness/understanding-threat-vectors' },
             { text: 'Cultivating a Security-Aware Mindset', link: '/awareness/cultivating-a-security-aware-mindset' },
@@ -53,15 +61,14 @@ const config = {
           text: 'Operational Security',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/opsec/README' },
+            { text: 'Overview', link: '/opsec/overview' },
             {
-              text: 'Overview Details',
+              text: 'OpSec Core Concepts',
               collapsed: false,
               items: [
-                { text: 'Highlights', link: '/opsec/overview/README' },
-                { text: 'Security Fundamentals', link: '/opsec/overview/security-fundamentals' },
-                { text: 'Implementation Process', link: '/opsec/overview/implementation-process' },
-                { text: 'Web3 considerations', link: '/opsec/overview/web3-considerations' },
+                { text: 'Security Fundamentals', link: '/opsec/core-concepts/security-fundamentals' },
+                { text: 'Implementation Process', link: '/opsec/core-concepts/implementation-process' },
+                { text: 'Web3 considerations', link: '/opsec/core-concepts/web3-considerations' },
               ]
             },
             { text: 'Threat Modeling Overview', link: '/opsec/threat-modeling-overview' },
@@ -70,7 +77,7 @@ const config = {
               text: 'While Traveling',
               collapsed: false,
               items: [
-                { text: 'Overview', link: '/opsec/travel/README' },
+                { text: 'Overview', link: '/opsec/travel/overview' },
                 { text: 'Guide', link: '/opsec/travel/guide' },
                 { text: 'TL;DR', link: '/opsec/travel/tldr' },
               ]
@@ -89,7 +96,7 @@ const config = {
           text: 'Wallet Security',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/wallet-security/README' },
+            { text: 'Overview', link: '/wallet-security/overview' },
             { text: 'Custodial vs Non-Custodial', link: '/wallet-security/custodial-vs-non-custodial' },
             { text: 'Cold vs Hot Wallet', link: '/wallet-security/cold-vs-hot-wallet' },
             { text: 'Wallets For Beginners & Small Balances', link: '/wallet-security/for-beginners-&-small-balances' },
@@ -114,12 +121,12 @@ const config = {
           text: 'External Security Reviews',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/external-security-reviews/README' },
+            { text: 'Overview', link: '/external-security-reviews/overview' },
             {
               text: 'Smart Contract Audits',
               collapsed: false,
               items: [
-                { text: 'Overview', link: '/external-security-reviews/smart-contracts/README' },
+                { text: 'Overview', link: '/external-security-reviews/smart-contracts/overview' },
                 { text: 'Manual Review', link: '/external-security-reviews/smart-contracts/manual-review' },
                 { text: 'Expectations', link: '/external-security-reviews/smart-contracts/expectation' },
                 { text: 'Preparation Guide', link: '/external-security-reviews/smart-contracts/preparation' },
@@ -133,7 +140,7 @@ const config = {
           text: 'Vulnerability Disclosure',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/vulnerability-disclosure/README' },
+            { text: 'Overview', link: '/vulnerability-disclosure/overview' },
             { text: 'Security Contact', link: '/vulnerability-disclosure/security-contact' },
             { text: 'Bug Bounties', link: '/vulnerability-disclosure/bug-bounties' },
           ]
@@ -142,7 +149,7 @@ const config = {
           text: 'Infrastructure',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/infrastructure/README' },
+            { text: 'Overview', link: '/infrastructure/overview' },
             { text: 'Asset Inventory', link: '/infrastructure/asset-inventory' },
             { text: 'Cloud Infrastructure', link: '/infrastructure/cloud' },
             { text: 'DDoS Protection', link: '/infrastructure/ddos-protection' },
@@ -157,7 +164,7 @@ const config = {
           text: 'Monitoring',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/monitoring/README' },
+            { text: 'Overview', link: '/monitoring/overview' },
             { text: 'Guidelines', link: '/monitoring/guidelines' },
             { text: 'Thresholds', link: '/monitoring/thresholds' },
           ]
@@ -166,7 +173,7 @@ const config = {
           text: 'Front-End/Web Application',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/front-end-web-app/README' },
+            { text: 'Overview', link: '/front-end-web-app/overview' },
             { text: 'Web Application Security', link: '/front-end-web-app/web-application-security' },
             { text: 'Mobile Application Security', link: '/front-end-web-app/mobile-application-security' },
             { text: 'Common Vulnerabilities', link: '/front-end-web-app/common-vulnerabilities' },
@@ -177,41 +184,52 @@ const config = {
           text: 'Incident Management',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/incident-management/README' },
+            { text: 'Overview', link: '/incident-management/overview' },
             { text: 'Communication Strategies', link: '/incident-management/communication-strategies' },
             { text: 'Incident Detection and Response', link: '/incident-management/incident-detection-and-response' },
             { text: 'Lessons Learned', link: '/incident-management/lessons-learned' },
-            { text: 'Playbooks', link: '/incident-management/playbooks' },
-            { text: 'SEAL 911 War Room Guidelines', link: '/incident-management/seal-911-war-room-guidelines' },
-            { text: 'Decentralized Incident Response Framework (DeIRF)', link: '/incident-management/decentralized-ir', dev: true },
+            {
+              text: 'Playbooks',
+              collapsed: false,
+              dev: true,
+              items: [
+                { text: 'Overview', link: '/incident-management/playbooks/overview', dev: true },
+                { text: 'Malware Infection', link: '/incident-management/playbooks/malware', dev: true },
+                { text: 'North Korea (DPRK) Attack', link: '/incident-management/playbooks/hacked-dprk', dev: true },
+                { text: 'Wallet Drainer Attack', link: '/incident-management/playbooks/hacked-drainer', dev: true },
+                { text: 'ELUSIVE COMET Attack', link: '/incident-management/playbooks/hacked-elusive-comet', dev: true },
+                { text: 'SEAL 911 War Room Guidelines', link: '/incident-management/playbooks/seal-911-war-room-guidelines', dev: true },
+                { text: 'Decentralized Incident Response Framework (DeIRF)', link: '/incident-management/playbooks/decentralized-ir', dev: true },
+              ]
+            },
           ]
         },
         {
           text: 'Threat Modeling',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/threat-modeling/README' },
+            { text: 'Overview', link: '/threat-modeling/overview' },
             { text: 'Create and Maintain Threat Models', link: '/threat-modeling/create-maintain-threat-models' },
             { text: 'Identity Mitigate Threats', link: '/threat-modeling/identity-mitigate-threats' },
           ]
         },
         {
-          text: 'Insider Threats',
+          text: 'DPRK IT Workers',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/insider-threats/README' },
-            { text: 'General Information', link: '/insider-threats/general-information' },
-            { text: 'Techniques, Tactics and Procedures', link: '/insider-threats/techniques-tactics-and-procedures' },
-            { text: 'Mitigating DPRK IT Workers', link: '/insider-threats/mitigating-dprk-it-workers' },
-            { text: 'Case Studies', link: '/insider-threats/case-studies' },
-            { text: 'Summary', link: '/insider-threats/summary' },
+            { text: 'Overview', link: '/dprk-it-workers/overview' },
+            { text: 'General Information', link: '/dprk-it-workers/general-information' },
+            { text: 'Techniques, Tactics and Procedures', link: '/dprk-it-workers/techniques-tactics-and-procedures' },
+            { text: 'Mitigating DPRK IT Workers', link: '/dprk-it-workers/mitigating-dprk-it-workers' },
+            { text: 'Case Studies', link: '/dprk-it-workers/case-studies' },
+            { text: 'Summary', link: '/dprk-it-workers/summary' },
           ]
         },
         {
           text: 'Governance',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/governance/README' },
+            { text: 'Overview', link: '/governance/overview' },
             { text: 'Compliance with Regulatory Requirements', link: '/governance/compliance-regulatory-requirements' },
             { text: 'Risk Management', link: '/governance/risk-management' },
             { text: 'Security Metrics and KPIs', link: '/governance/security-metrics-kpis' },
@@ -221,7 +239,7 @@ const config = {
           text: 'DevSecOps',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/devsecops/README' },
+            { text: 'Overview', link: '/devsecops/overview' },
             { text: 'Code Signing', link: '/devsecops/code-signing' },
             { text: 'Continuous Integration and Deployment', link: '/devsecops/continuous-integration-continuous-deployment' },
             { text: 'Integrated Development Environments', link: '/devsecops/integrated-development-environments' },
@@ -233,7 +251,7 @@ const config = {
           text: 'Privacy',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/privacy/README' },
+            { text: 'Overview', link: '/privacy/overview' },
             { text: 'Secure Browsing', link: '/privacy/secure-browsing' },
             { text: 'Data Removal Services', link: '/privacy/data-removal-services' },
             { text: 'Digital Footprint', link: '/privacy/digital-footprint' },
@@ -247,7 +265,7 @@ const config = {
           text: 'Supply Chain',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/supply-chain/README' },
+            { text: 'Overview', link: '/supply-chain/overview' },
             { text: 'Dependency Awareness', link: '/supply-chain/dependency-awareness' },
             { text: 'Supply Chain Levels for Software Artifacts', link: '/supply-chain/supply-chain-levels-software-artifacts' },
           ]
@@ -256,7 +274,7 @@ const config = {
           text: 'Security Automation',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/security-automation/README' },
+            { text: 'Overview', link: '/security-automation/overview' },
             { text: 'Threat Detection and Response', link: '/security-automation/threat-detection-response' },
             { text: 'Compliance Checks', link: '/security-automation/compliance-checks' },
             { text: 'Infrastructure as Code', link: '/security-automation/infrastructure-as-code' },
@@ -266,7 +284,7 @@ const config = {
           text: 'Identity and Access Management IAM',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/iam/README' },
+            { text: 'Overview', link: '/iam/overview' },
             { text: 'Role-Based Access Control', link: '/iam/role-based-access-control' },
             { text: 'Secure Authentication', link: '/iam/secure-authentication' },
             { text: 'Access Management Best Practices', link: '/iam/access-management' },
@@ -276,7 +294,7 @@ const config = {
           text: 'Secure Software Development',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/secure-software-development/README' },
+            { text: 'Overview', link: '/secure-software-development/overview' },
             { text: 'Secure Coding Standards Guidelines', link: '/secure-software-development/secure-coding-standards-guidelines' },
             { text: 'Code Reviews and Peer Audits', link: '/secure-software-development/code-reviews-peer-audits' },
             { text: 'Secure Code Repositories and Version Control', link: '/secure-software-development/secure-code-repositories-version-control' },
@@ -287,7 +305,7 @@ const config = {
           text: 'Security Testing',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/security-testing/README' },
+            { text: 'Overview', link: '/security-testing/overview' },
             { text: 'Unit Testing', link: '/security-testing/unit-testing' },
             { text: 'Integration Testing', link: '/security-testing/integration-testing' },
             { text: 'Fuzz Testing', link: '/security-testing/fuzz-testing' },
@@ -300,7 +318,7 @@ const config = {
           text: 'ENS',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/ens/README' },
+            { text: 'Overview', link: '/ens/overview' },
             { text: 'Data Integrity & Verification', link: '/ens/data-integrity-verification' },
             { text: 'Cross-Chain Compatibility', link: '/ens/cross-chain-compatibility' },
             { text: 'Smart Contract Integration', link: '/ens/smart-contract-integration' },
@@ -312,7 +330,7 @@ const config = {
           text: 'Safe Harbor',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/safe-harbor/README' },
+            { text: 'Overview', link: '/safe-harbor/overview' },
             { text: 'Safe Harbor Eligibility Checklist', link: '/safe-harbor/self-checklist' },
             { text: 'Self-Adoption Guide', link: '/safe-harbor/self-adoption-guide' },
             { text: 'Safe Harbor Scope Terms', link: '/safe-harbor/scope-terms' },
@@ -325,7 +343,7 @@ const config = {
           collapsed: false,
           dev: true,
           items: [
-            { text: 'Overview', link: '/monitoring/README', dev: true },
+            { text: 'Overview', link: '/monitoring/overview', dev: true },
             { text: 'Guidelines', link: '/monitoring/guidelines', dev: true },
             { text: 'Thresholds', link: '/monitoring/thresholds', dev: true },
           ]
@@ -335,7 +353,7 @@ const config = {
           collapsed: false,
           dev: true,
           items: [
-            { text: 'Overview', link: '/encryption/README', dev: true },
+            { text: 'Overview', link: '/encryption/overview', dev: true },
             { text: 'Cloud Data Encryption', link: '/encryption/cloud-data-encryption', dev: true },
             { text: 'Communication Encryption', link: '/encryption/communication-encryption', dev: true },
             { text: 'Database Encryption', link: '/encryption/database-encryption', dev: true },
@@ -361,8 +379,8 @@ const config = {
           collapsed: false,
           items: [
             { text: 'Overview', link: '/contribute/contributing' },
-            { text: 'Contributors', link: '/contribute/contributors' },
-            { text: 'Stewards', link: '/contribute/stewards' },
+            { text: 'Spotlight Zone', link: '/contribute/spotlight-zone' },
+            { text: 'Stewardship', link: '/contribute/stewards' },
 
           ]
         },
