@@ -1,6 +1,12 @@
 import { defineConfig, ColorScheme } from 'vocs'
 
 const config = {
+  redirects: [
+    {
+      from: "/",
+      to: "/intro/introduction",
+    },
+  ],
   theme: {
     colorScheme: 'dark' as ColorScheme
   },
