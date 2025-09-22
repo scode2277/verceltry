@@ -31,8 +31,3 @@
 :root:not(.dark) .vocs_DocsLayout {
     color: #060606;
 }
-
-:root {
-    color-scheme: dark !important;
-}
-
