@@ -4,33 +4,7 @@ title: "Introduction"
 
 <html>
 <head>
-  <script>
-    (function() {
-      console.log("in index.mdx");
-      if (typeof window === 'undefined') return;
-      
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const storedTheme = localStorage.getItem('vocs.theme');
-      
-      const theme = storedTheme || (prefersDark ? 'dark' : 'light');
-      
-      if (theme === 'dark') {
-        document.documentElement.classList.add('dark');
-        document.documentElement.style.colorScheme = 'dark';
-        document.documentElement.style.backgroundColor = '#0a0a0a';
-        document.documentElement.style.color = '#ffffff';
-      } else {
-        document.documentElement.classList.remove('dark');
-        document.documentElement.style.colorScheme = 'light';
-        document.documentElement.style.backgroundColor = '#ffffff';
-        document.documentElement.style.color = '#000000';
-      }
-      
-      if (!storedTheme) {
-        localStorage.setItem('vocs.theme', theme);
-      }
-    })();
-  </script>
+ 
   <meta httpEquiv="refresh" content="0; url=/intro/introduction" />
 </head>
 <body>
