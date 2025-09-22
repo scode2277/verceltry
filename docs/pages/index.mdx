@@ -4,29 +4,7 @@ title: "Introduction"
 
 <html>
 <head>
-  <script>
-    // Inline theme initialization to prevent flashing
-    (function() {
-      "use strict";
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
-      if (!(document.documentElement.classList.contains("dark") || document.documentElement.classList.contains("light"))) {
-        const storedTheme = localStorage.getItem("vocs.theme");
-        const theme = storedTheme || (prefersDark.matches ? "dark" : "light");
-        if (theme === "dark") {
-          document.documentElement.classList.add("dark");
-        }
-        if (!storedTheme) {
-          prefersDark.addEventListener("change", ({ matches }) => {
-            if (matches) {
-              document.documentElement.classList.add("dark");
-            } else {
-              document.documentElement.classList.remove("dark");
-            }
-          });
-        }
-      }
-    })();
-  </script>
+  
   <meta httpEquiv="refresh" content="0; url=/intro/introduction" />
 </head>
 <body>
