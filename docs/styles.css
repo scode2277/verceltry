@@ -2,17 +2,8 @@
     height: 80% !important;
 }
 
-.vocs_DocsLayout_content_withSidebar {
-    margin-left: max(calc((100vw - calc(70ch + (3rem * 2))) / 2), 300px);
-}
-
 .vocs_DocsLayout_gutterLeft {
     justify-content: flex-start;
-    width: unset;
-}
-
-.vocs_DocsLayout_gutterRight {
-    justify-content: flex-end;
     width: unset;
 }
 
@@ -23,11 +14,149 @@
     }
 }
 
-
 .vocs_DesktopTopNav_logoWrapper {
     display: none;
 }
 
 :root:not(.dark) .vocs_DocsLayout {
     color: #060606;
+}
+
+:root:not(.dark) .vocs_Sidebar_item[data-active="true"] {
+    font-weight: 500;
+}
+
+:root:not(.dark) .vocs_Sidebar_item {
+    font-weight: 400;
+}
+
+:root:not(.dark) .vocs_Blockquote {
+    border-left: 2px solid #000000;
+}
+
+:root:not(.dark) .vocs_Sidebar_sectionHeader .vocs_Sidebar_item {
+    color: #000000;
+    font-weight: 450;
+}
+
+:root:not(.dark) .vocs_Blockquote>.vocs_Paragraph {
+    color: #0706069e;
+    font-weight: bolder;
+}
+
+:root:not(.dark) .vocs_Blockquote {
+    color: #060606;
+}
+
+:root:not(.dark) .vocs_DesktopSearch_search {
+    border: 1px solid #908f8f;
+}
+
+:root:not(.dark) .vocs_DesktopSearch_search:hover {
+    border-color: #303030;
+    color: #1e1e1e;
+}
+
+
+:root:not(.dark) .vocs_AiCtaDropdown_buttonLeft.vocs_AiCtaDropdown_buttonLeft {
+    border: 1px solid #908f8f;
+}
+
+:root:not(.dark) .vocs_AiCtaDropdown_buttonLeft.vocs_AiCtaDropdown_buttonLeft:hover {
+    border-color: #303030;
+    color: #1e1e1e;
+}
+
+:root:not(.dark) .vocs_AiCtaDropdown_buttonRight.vocs_AiCtaDropdown_buttonRight {
+    border: 1px solid #908f8f;
+}
+
+:root:not(.dark) .vocs_AiCtaDropdown_buttonRight.vocs_AiCtaDropdown_buttonRight:hover {
+    border-color: #303030;
+    color: #1e1e1e;
+}
+
+:root:not(.dark) .vocs_AiCtaDropdown_buttonLeft.vocs_AiCtaDropdown_buttonLeft {
+    border: 1px solid #908f8f;
+}
+
+:root:not(.dark) .vocs_AiCtaDropdown_buttonLeft.vocs_AiCtaDropdown_buttonLeft:hover {
+    border-color: #303030;
+    color: #1e1e1e;
+}
+
+:root:not(.dark) .vocs_AiCtaDropdown_dropdownMenuContent {
+    border: 1px solid #908f8f;
+}
+
+:root:not(.dark) .vocs_AiCtaDropdown_dropdownMenuContent:hover {
+    border-color: #303030;
+    color: #1e1e1e;
+}
+
+.vocs_Sidebar_footerContent {
+    margin-bottom: calc(10px + var(--vocs_Banner_bannerHeight, 0px));
+}
+
+/* Override vocs light theme with dark theme as default */
+:root {
+  /* Dark theme color variables - extracted from vocs :root.dark styles */
+  --vocs-color_white: rgba(255 255 255 / 100%);
+  --vocs-color_black: rgba(0 0 0 / 100%);
+  --vocs-color_background: #1a1523;
+  --vocs-color_background2: #1e1b29;
+  --vocs-color_background3: #1e1b29;
+  --vocs-color_background4: #21202e;
+  --vocs-color_background5: #252338;
+  --vocs-color_backgroundAccent: #1c4ed8;
+  --vocs-color_backgroundAccentHover: #1e40af;
+  --vocs-color_backgroundAccentText: rgba(255 255 255 / 100%);
+  --vocs-color_backgroundBlueTint: rgba(59 130 246 / 0.15);
+  --vocs-color_backgroundDark: #0e0d0f;
+  --vocs-color_backgroundDarkTint: #1e1b29;
+  --vocs-color_backgroundGreenTint: rgba(34 197 94 / 0.15);
+  --vocs-color_backgroundGreenTint2: rgba(34 197 94 / 0.2);
+  --vocs-color_backgroundIrisTint: rgba(139 92 246 / 0.2);
+  --vocs-color_backgroundRedTint: rgba(239 68 68 / 0.15);
+  --vocs-color_backgroundRedTint2: rgba(239 68 68 / 0.2);
+  --vocs-color_backgroundYellowTint: rgba(251 191 36 / 0.1);
+  --vocs-color_border: #252338;
+  --vocs-color_border2: #2e2a3e;
+  --vocs-color_borderAccent: #1e40af;
+  --vocs-color_borderBlue: rgba(59 130 246 / 0.2);
+  --vocs-color_borderGreen: rgba(34 197 94 / 0.25);
+  --vocs-color_borderIris: #6d28d9;
+  --vocs-color_borderRed: rgba(239 68 68 / 0.2);
+  --vocs-color_borderYellow: rgba(251 191 36 / 0.1);
+  --vocs-color_heading: rgba(255 255 255 / 100%);
+  --vocs-color_inverted: rgba(255 255 255 / 100%);
+  --vocs-color_shadow: rgba(0 0 0 / 0.05);
+  --vocs-color_shadow2: rgba(0 0 0 / 0.05);
+  --vocs-color_text: rgba(255 255 255 / 0.8);
+  --vocs-color_text2: rgba(255 255 255 / 0.7);
+  --vocs-color_text3: rgba(255 255 255 / 0.6);
+  --vocs-color_text4: rgba(255 255 255 / 0.5);
+  --vocs-color_textAccent: #1e40af;
+  --vocs-color_textAccentHover: #1c4ed8;
+  --vocs-color_textBlue: #3b82f6;
+  --vocs-color_textBlueHover: #1e40af;
+  --vocs-color_textGreen: #10b981;
+  --vocs-color_textGreenHover: #059669;
+  --vocs-color_textHover: rgba(255 255 255 / 100%);
+  --vocs-color_textIris: #8b5cf6;
+  --vocs-color_textIrisHover: #7c3aed;
+  --vocs-color_textRed: #ef4444;
+  --vocs-color_textRedHover: #dc2626;
+  --vocs-color_textYellow: #f59e0b;
+  --vocs-color_textYellowHover: #d97706;
+  --vocs-color_title: rgba(255 255 255 / 100%);
+  
+  /* Set color scheme to dark */
+  color-scheme: dark;
+}
+
+/* Ensure theme toggle is always visible */
+.vocs_Sidebar_footerContent .vocs_ThemeToggle_root,
+.vocs_MobileTopNav_topNavPopoverFooter .vocs_ThemeToggle_root {
+  display: flex !important;
 }
