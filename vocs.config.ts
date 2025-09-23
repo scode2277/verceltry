@@ -1,15 +1,32 @@
 import { defineConfig, ColorScheme } from 'vocs'
+import { createElement } from 'react'
 
 const config = {
-  redirects: [
-    {
-      from: "/",
-      to: "/intro/introduction",
-    },
-  ],
-  theme: {
-    colorScheme: 'dark' as ColorScheme
-  },
+  head: createElement('script', {
+    dangerouslySetInnerHTML: {
+      __html: `
+        (function() {
+          // Force dark mode as default theme
+          // Only respect user's stored preference if they explicitly chose light mode
+          const storedTheme = localStorage.getItem('vocs.theme');
+          
+          if (storedTheme === 'light') {
+            // User explicitly chose light mode, respect their choice
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+          } else {
+            // Default to dark mode for everyone else
+            document.documentElement.classList.remove('light');
+            document.documentElement.classList.add('dark');
+            // Set dark as the stored preference if none exists
+            if (!storedTheme) {
+              localStorage.setItem('vocs.theme', 'dark');
+            }
+          }
+        })();
+      `
+    }
+  }),
   banner: {
     content: '***This is a work in progress and not a release. We are looking for volunteers. See [Issues](https://github.com/security-alliance/frameworks/issues) and [Contribution](https://github.com/security-alliance/frameworks/blob/develop/docs/pages/contribute/contributing.mdx) to know how to collaborate.***',
     height: '30px',
@@ -21,7 +38,9 @@ const config = {
   description: 'Comprehensive security framework documentation for Web3 projects and blockchain security best practices.',
   logoUrl: '/logo/frameworks-full.svg',
   iconUrl: '/logo/favicon.svg',
-
+  theme: {
+    accentColor: '#ffffff'
+  },
   sidebar: [
     {
       text: 'Introduction',
