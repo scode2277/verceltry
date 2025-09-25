@@ -98,7 +98,4 @@
     margin-bottom: calc(10px + var(--vocs_Banner_bannerHeight, 0px));
 }
 
-html:not(.light) {
-    
-  }
   
