@@ -9,6 +9,7 @@
     { "source": "/contribute", "destination": "/contribute/contributing" },
     { "source": "/contribute/", "destination": "/contribute/contributing" },
     { "source": "/:section", "destination": "/:section/overview" },
+    { "source": "/:section/overview", "destination": "/:section/README" },
     { "source": "/:section/", "destination": "/:section/overview" }
   ]
 }
