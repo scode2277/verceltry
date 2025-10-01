@@ -1,0 +1,1 @@
+docs/pages/contribute/contributing.mdx
