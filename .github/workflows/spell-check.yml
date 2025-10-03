@@ -31,12 +31,16 @@ jobs:
           output=$(npx cspell lint "docs/pages/**/*.mdx" --no-progress --no-summary || true)
 
           if [[ -n "$output" ]]; then
-            echo "```\n$output\n```"
-            # Format output:
+            echo "Typos found, formatting output..."
+            # Format output with backticks:
             formatted=$(echo "$output" | nl -w2 -s'. ')
             TYPOS+="### 📄 docs/pages:"
             TYPOS+=$'\n'
+            TYPOS+='```'
+            TYPOS+=$'\n'
             TYPOS+="$formatted"
+            TYPOS+=$'\n'
+            TYPOS+='```'
             TYPOS+=$'\n\n'
             {
               echo 'TYPOS<<EOF'
@@ -58,7 +62,7 @@ jobs:
 
             Following typos were found in the pull request:
             
-            ${\`typos\`}
+            ${typos}
 
             ## ℹ️ Here's how to fix them:
             - **Fix typos:** Open the relevant files and fix any identified typos.
