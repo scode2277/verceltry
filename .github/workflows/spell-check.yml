@@ -35,9 +35,9 @@ jobs:
             # Format output:
             formatted=$(echo "$output" | nl -w2 -s'. ')
             TYPOS+="### 📄 docs/pages:"
-            TYPOS+=$'\n```'
+            TYPOS+=$'\n'
             TYPOS+="$formatted"
-            TYPOS+=$'```\n\n'
+            TYPOS+=$'\n\n'
             {
               echo 'TYPOS<<EOF'
               echo "$TYPOS"
