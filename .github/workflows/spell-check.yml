@@ -55,7 +55,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const author = '${{github.event.pull_request.user.login}}';
-            const typos = `${{ env.TYPOS }}`;
+            const typos = process.env.TYPOS;
             const body = `
             Hi @${author},
 
