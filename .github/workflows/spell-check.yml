@@ -58,7 +58,7 @@ jobs:
 
             Following typos were found in the pull request:
             
-            ${typos}
+            ${\`typos\`}
 
             ## ℹ️ Here's how to fix them:
             - **Fix typos:** Open the relevant files and fix any identified typos.
