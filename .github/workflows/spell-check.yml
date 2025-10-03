@@ -31,12 +31,13 @@ jobs:
           output=$(npx cspell lint "docs/pages/**/*.mdx" --no-progress --no-summary || true)
 
           if [[ -n "$output" ]]; then
-          echo "$output"
-          # Wrap output in a code block for nicer PR formatting
-          formatted="```\n$output\n```"
-          TYPOS+="### 📄 docs/pages\n"
-          TYPOS+="$formatted"
-          TYPOS+=$'\n\n'
+            echo "```\n$output\n```"
+            # Format output:
+            formatted=$(echo "$output" | nl -w2 -s'. ')
+            TYPOS+="### 📄 $file"
+            TYPOS+=$'\n'
+            TYPOS+="$formatted"
+            TYPOS+=$'\n\n'
             {
               echo 'TYPOS<<EOF'
               echo "$TYPOS"
