@@ -33,11 +33,11 @@ jobs:
           if [[ -n "$output" ]]; then
             echo "```\n$output\n```"
             # Format output:
-            formatted=$(echo "```\n$output\n```" | nl -w2 -s'. ')
+            formatted=$(echo "$output" | nl -w2 -s'. ')
             TYPOS+="### 📄 docs/pages:"
-            TYPOS+=$'\n'
+            TYPOS+=$'\n```'
             TYPOS+="$formatted"
-            TYPOS+=$'\n\n'
+            TYPOS+=$'```\n\n'
             {
               echo 'TYPOS<<EOF'
               echo "$TYPOS"
