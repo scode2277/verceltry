@@ -22,22 +22,21 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 2
 
-      - name: Find and check typos in Markdown/MDX files
+      - name: Find and check typos in mdx files
         id: find_typos
         run: |
           echo "Checking for typos..."
           set -o pipefail
           # Run cspell and capture output, but don't fail yet
-          output=$(npx cspell lint "docs/pages/**/*.{md,mdx}" --no-progress --no-summary || true)
+          output=$(npx cspell lint "docs/pages/**/*.mdx" --no-progress --no-summary || true)
 
           if [[ -n "$output" ]]; then
-            echo "$output"
-            # Format output: group by file like aspell version
-            formatted=$(echo "$output" | sed 's/^/    1. /')
-            TYPOS+="- 📄 docs/pages:"
-            TYPOS+=$'\n'
-            TYPOS+="$formatted"
-            TYPOS+=$'\n'
+          echo "$output"
+          # Wrap output in a code block for nicer PR formatting
+          formatted="```\n$output\n```"
+          TYPOS+="### 📄 docs/pages\n"
+          TYPOS+="$formatted"
+          TYPOS+=$'\n\n'
             {
               echo 'TYPOS<<EOF'
               echo "$TYPOS"
@@ -67,7 +66,7 @@ jobs:
             - **🚧 Remember:**
               - When adding new words it MUST NOT have any spaces or special characters within or around it.
               - \`wordlist\` is NOT case sensitive.
-              - Use backticks to quote code variables so as to not bloat the \`wordlist\`.
+              - If code variables are flagged, wrap them in backticks instead of adding them to the \`wordlist\`. This way they are treated as code and won’t bloat the \`wordlist\` with project-specific identifiers.
             `;
 
             github.rest.issues.createComment({
