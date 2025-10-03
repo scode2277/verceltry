@@ -32,7 +32,6 @@ jobs:
 
           if [[ -n "$output" ]]; then
             echo "Typos found, formatting output..."
-            # Format output with backticks:
             formatted=$(echo "$output" | nl -w2 -s'. ')
             TYPOS+="### 📄 docs/pages:"
             TYPOS+=$'\n'
