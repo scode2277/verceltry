@@ -32,13 +32,34 @@ jobs:
 
           if [[ -n "$output" ]]; then
             echo "Typos found, formatting output..."
-            formatted=$(echo "$output" | nl -w2 -s'. ')
+            
+            # Format output with numbered lines and backticks around filenames
+            formatted_output=""
+            while IFS= read -r line; do
+              if [[ -n "$line" ]]; then
+                # Extract the numbered format and wrap filename in backticks
+                # Expected format: " 1. docs/pages/file.mdx:72:46 - Unknown word (Acivity)"
+                if [[ $line =~ ^[[:space:]]*([0-9]+\.)[[:space:]]*(.+):([0-9]+):([0-9]+)[[:space:]]*-[[:space:]]*(.+)$ ]]; then
+                  number="${BASH_REMATCH[1]}"
+                  file="${BASH_REMATCH[2]}"
+                  line_num="${BASH_REMATCH[3]}"
+                  col_num="${BASH_REMATCH[4]}"
+                  error_desc="${BASH_REMATCH[5]}"
+                  
+                  # Format with backticks around filename
+                  formatted_output+="$number \`$file\`:$line_num:$col_num - $error_desc"$'\n'
+                else
+                  # Fallback: just add the line as-is
+                  formatted_output+="$line"$'\n'
+                fi
+              fi
+            done <<< "$output"
+            
             TYPOS+="### 📄 docs/pages:"
             TYPOS+=$'\n'
             TYPOS+='```'
             TYPOS+=$'\n'
-            TYPOS+="$formatted"
-            TYPOS+=$'\n'
+            TYPOS+="$formatted_output"
             TYPOS+='```'
             TYPOS+=$'\n\n'
             {
