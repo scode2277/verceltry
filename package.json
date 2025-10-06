@@ -9,7 +9,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "docs:dev": "npm run generate-tags && vocs dev",
-    "docs:build": "npm run generate-tags && vocs build && ls -R && cp docs/dist/404/index.html docs/dist/404.html",
+    "docs:build": "npm run generate-tags && vocs build && echo "==== Checking for 404 ====" && find . -type f -name "index.html" | grep 404
+",
     "docs:preview": "vocs preview",
     "generate-tags": "node utils/tags-fetcher.js"
   },
