@@ -3,6 +3,16 @@ import { defineConfig, ColorScheme } from 'vocs'
 const config = {
   
   banner: {
+    themeConfig: {
+      search: {
+        provider: 'algolia',
+        options: {
+          appId: '4I4DXUW54S',
+          apiKey: '9e5532a0dbb1cac81668f18ece1f47c2',
+          indexName: 'frameworks-test',
+        },
+      },
+    },
     content: '***This is a work in progress and not a release. We are looking for volunteers. See [Issues](https://github.com/security-alliance/frameworks/issues) and [Contribution](https://github.com/security-alliance/frameworks/blob/develop/docs/pages/contribute/contributing.mdx) to know how to collaborate.***',
     height: '30px',
     backgroundColor: '#8b5cf6',
