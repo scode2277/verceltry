@@ -12,6 +12,8 @@ const MiniSearch = require('minisearch');
 const workspaceRoot = process.cwd();
 const pagesDir = path.join(workspaceRoot, 'docs', 'pages');
 const distVocsDir = path.join(workspaceRoot, 'docs', 'dist', '.vocs');
+const vercelVocsDir = path.join(workspaceRoot, '.vercel', 'output', 'static', '.vocs');
+const vercelPath0DistVocsDir = '/vercel/path0/docs/dist/.vocs';
 
 function walkFiles(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -99,22 +101,42 @@ function extractSectionsFromMdx(raw) {
 }
 
 async function main() {
-  if (!fs.existsSync(distVocsDir)) {
-    console.error(`.vocs dir not found at ${distVocsDir}. Run docs build first.`);
+  // Determine where the built search index exists (try /vercel/path0, Vercel outDir, docs/dist)
+  const candidateDirs = [vercelPath0DistVocsDir, vercelVocsDir, distVocsDir];
+
+  let baseDirForIndex = undefined;
+  let fileName = undefined;
+
+  for (const dir of candidateDirs) {
+    try {
+      if (!fs.existsSync(dir)) {
+        console.log(`Listing skipped (not found): ${dir}`);
+        continue;
+      }
+      const items = fs.readdirSync(dir);
+      console.log(`Listing ${dir}:`, items);
+      const candidates = items.filter((f) => /^search-index-.*\.json$/i.test(f)).sort();
+      if (candidates.length > 0) {
+        baseDirForIndex = dir;
+        fileName = candidates[0];
+        break;
+      }
+    } catch (e) {
+      console.log(`Listing failed for ${dir}: ${e.message}`);
+    }
+  }
+
+  if (!baseDirForIndex || !fileName) {
+    console.error(`No existing Vocs search index file found in any candidate directory: ${candidateDirs.join(', ')}`);
     process.exit(1);
   }
 
-  const indexFiles = fs
-    .readdirSync(distVocsDir)
-    .filter((f) => /^search-index-.*\.json$/i.test(f))
-    .sort();
-  if (indexFiles.length === 0) {
-    console.error('No existing Vocs search index file found to overwrite.');
-    process.exit(1);
-  }
-
-  const fileName = indexFiles[0];
-  const targetIndexFile = path.join(distVocsDir, fileName);
+  const payloadTargets = [];
+  // Always write back to the discovered base dir first
+  payloadTargets.push(path.join(baseDirForIndex, fileName));
+  // And mirror to common output locations if they exist or can be created
+  if (baseDirForIndex !== distVocsDir) payloadTargets.push(path.join(distVocsDir, fileName));
+  if (baseDirForIndex !== vercelVocsDir) payloadTargets.push(path.join(vercelVocsDir, fileName));
 
   const files = walkFiles(pagesDir);
   const documents = [];
@@ -149,18 +171,10 @@ async function main() {
   const json = mini.toJSON();
 
   const payload = JSON.stringify(json);
-  fs.writeFileSync(targetIndexFile, payload);
-  console.log(`Search index overwritten with ${documents.length} sections at ${targetIndexFile}`);
-
-  // Also copy into Vercel static output path
-  const vercelVocsDir = path.join(workspaceRoot, '.vercel', 'output', 'static', '.vocs');
-  try {
-    fs.mkdirSync(vercelVocsDir, { recursive: true });
-    const vercelTarget = path.join(vercelVocsDir, fileName);
-    fs.writeFileSync(vercelTarget, payload);
-    console.log(`Search index copied to ${vercelTarget}`);
-  } catch (e) {
-    console.warn('Warning: could not copy index to Vercel output:', e.message);
+  for (const target of payloadTargets) {
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, payload);
+    console.log(`Search index written (${documents.length} sections): ${target}`);
   }
 }
 
