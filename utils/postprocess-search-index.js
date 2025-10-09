@@ -1,7 +1,23 @@
 /*
-  Post-process Vocs search index to include MDX pages that contain imports/components.
-  Approach: build a MiniSearch index by parsing MDX as text (no execution),
-  extracting headings and section text, then overwrite the built .vocs/search-index-<hash>.json.
+  Purpose
+  - Ensure MDX pages that include ESM imports/components are indexed for search.
+  - Vocs’ default indexer renders MDX; render errors (due to imports) yield empty sections.
+  - This script builds a supplemental MiniSearch index by parsing MDX as plain text
+    (no execution) and writes it over the generated search-index-<hash>.json.
+
+  High-level flow
+  1) Locate the generated search index file by scanning common output dirs.
+     - /vercel/path0/docs/dist/.vocs (Vercel build path)
+     - .vercel/output/static/.vocs (Vercel static output)
+     - docs/dist/.vocs (local build output)
+  2) Walk docs/pages and extract sections using markdown headings (#, ##, ...).
+  3) Create a MiniSearch index using titles + text (code fences stripped).
+  4) Overwrite the found search-index-<hash>.json and mirror to the other dirs.
+
+  Notes & caveats
+  - We do not execute MDX; imports/components are treated as inert text.
+  - Anchors are derived from headings (slugified). IDs are made unique with ::<i>.
+  - This mirrors the structure Vocs expects (fields: href, html, isPage, text, title, titles).
 */
 
 const fs = require('fs');
@@ -14,8 +30,11 @@ const pagesDir = path.join(workspaceRoot, 'docs', 'pages');
 const distVocsDir = path.join(workspaceRoot, 'docs', 'dist', '.vocs');
 const vercelVocsDir = path.join(workspaceRoot, '.vercel', 'output', 'static', '.vocs');
 const vercelPath0DistVocsDir = '/vercel/path0/docs/dist/.vocs';
+const vercelStaticDir = path.join(workspaceRoot, '.vercel', 'output', 'static');
+const vocsConfigPath = path.join(workspaceRoot, 'vocs.config.ts');
 
 function walkFiles(dir, out = []) {
+  // Recursively collect .md/.mdx files
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, entry.name);
     if (entry.isDirectory()) walkFiles(p, out);
@@ -25,6 +44,7 @@ function walkFiles(dir, out = []) {
 }
 
 function slugify(input) {
+  // Minimal slug generator for anchor fragments derived from headings
   return String(input)
     .trim()
     .toLowerCase()
@@ -36,6 +56,7 @@ function slugify(input) {
 }
 
 function removeFences(str) {
+  // Remove fenced code blocks’ opening lines to avoid dense token noise
   return str.replace(/^```.*$/gm, '').replace(/^~~~.*$/gm, '');
 }
 
@@ -44,6 +65,7 @@ function normalizeSlashes(p) {
 }
 
 function computeHref(filePath) {
+  // Map docs/pages/<path>.mdx to /<path> (index.md[x] collapses to directory route)
   const relFromPages = normalizeSlashes(path.relative(pagesDir, filePath));
   const withoutExt = relFromPages.replace(/\.(md|mdx)$/i, '');
   const noIndex = withoutExt.replace(/\/index$/i, '');
@@ -51,6 +73,7 @@ function computeHref(filePath) {
 }
 
 function extractSectionsFromMdx(raw) {
+  // Parse frontmatter, then split content into sections by ATX headings
   const { content } = matter(raw);
   const lines = content.split(/\r?\n/);
 
@@ -61,6 +84,7 @@ function extractSectionsFromMdx(raw) {
   for (const line of lines) {
     const m = /^(#{1,6})\s+(.*)$/.exec(line);
     if (m) {
+      // Emit previously collected section before starting a new heading
       if (current) sections.push(current);
 
       const level = m[1].length;
@@ -79,7 +103,7 @@ function extractSectionsFromMdx(raw) {
         chunks: [],
       };
     } else {
-      if (!current) continue;
+      if (!current) continue; // ignore text until first heading
       current.chunks.push(line);
     }
   }
@@ -102,6 +126,7 @@ function extractSectionsFromMdx(raw) {
 
 async function main() {
   // Determine where the built search index exists (try /vercel/path0, Vercel outDir, docs/dist)
+  // Try these directories in order; pick the first that contains the index
   const candidateDirs = [vercelPath0DistVocsDir, vercelVocsDir, distVocsDir];
 
   let baseDirForIndex = undefined;
@@ -162,19 +187,64 @@ async function main() {
     });
   }
 
+  // Derive allowed routes from Vercel static output (preferred) or from vocs.config.ts
+  let allowedRoutes = undefined;
+  if (fs.existsSync(vercelStaticDir)) {
+    // Walk .vercel/output/static and collect all directories that contain index.html
+    const stack = [vercelStaticDir];
+    const routes = new Set();
+    while (stack.length) {
+      const dir = stack.pop();
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      let hasIndex = false;
+      for (const e of entries) {
+        if (e.isFile() && e.name === 'index.html') hasIndex = true;
+      }
+      if (hasIndex) {
+        const rel = normalizeSlashes(path.relative(vercelStaticDir, dir));
+        const route = '/' + rel.replace(/^\/?/, '');
+        routes.add(route === '/.' || route === '/' ? '/' : route);
+      }
+      for (const e of entries) {
+        if (e.isDirectory()) stack.push(path.join(dir, e.name));
+      }
+    }
+    // Remove obvious non-doc routes
+    routes.delete('/');
+    routes.delete('/404');
+    allowedRoutes = routes;
+  } else if (fs.existsSync(vocsConfigPath)) {
+    try {
+      const cfg = fs.readFileSync(vocsConfigPath, 'utf8');
+      const linkRegex = /link:\s*'([^']+)'/g;
+      const routes = new Set();
+      let m;
+      while ((m = linkRegex.exec(cfg)) !== null) {
+        routes.add(m[1]);
+      }
+      if (routes.size > 0) allowedRoutes = routes;
+    } catch {}
+  }
+
+  let filteredDocuments = documents;
+  if (allowedRoutes && allowedRoutes.size > 0) {
+    filteredDocuments = documents.filter((d) => allowedRoutes.has(d.href.split('#')[0]));
+    console.log(`Filtering to sidebar/static routes: ${filteredDocuments.length} of ${documents.length} sections`);
+  }
+
   const mini = new MiniSearch({
     fields: ['title', 'titles', 'text'],
     storeFields: ['href', 'html', 'isPage', 'text', 'title', 'titles'],
   });
 
-  await mini.addAllAsync(documents);
+  await mini.addAllAsync(filteredDocuments);
   const json = mini.toJSON();
 
   const payload = JSON.stringify(json);
   for (const target of payloadTargets) {
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, payload);
-    console.log(`Search index written (${documents.length} sections): ${target}`);
+    console.log(`Search index written (${filteredDocuments.length} sections): ${target}`);
   }
 }
 
