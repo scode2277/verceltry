@@ -199,30 +199,35 @@ async function main() {
     try {
       const cfg = fs.readFileSync(vocsConfigPath, 'utf8');
       
-      // Parse sidebar structure to extract links and their dev flags
-      // Match objects with optional dev flag and link property
-      const itemRegex = /\{\s*(?:[^}]*dev:\s*(true|false)[^}]*)?[^}]*link:\s*(['"])(.*?)\2[^}]*\}/gs;
+      // Extract all link and dev pairs by scanning line-by-line
+      // This approach handles nested objects better than complex regex
+      const lines = cfg.split('\n');
       const routes = new Set();
-      let m;
-      while ((m = itemRegex.exec(cfg)) !== null) {
-        const hasDev = m[1] === 'true';
-        const link = m[3];
-        
-        // On main branch: skip pages with dev: true
-        // On other branches: include all pages
-        if (isMainBranch && hasDev) {
-          console.log(`  Skipping dev page: ${link}`);
-          continue;
-        }
-        
-        if (link) routes.add(link);
-      }
       
-      // Fallback: if regex didn't capture dev flags, use simpler link-only regex
-      if (routes.size === 0) {
-        const linkRegex = /link:\s*(['"])(.*?)\1/g;
-        while ((m = linkRegex.exec(cfg)) !== null) {
-          if (m[2]) routes.add(m[2]);
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const linkMatch = line.match(/link:\s*(['"])(.*?)\1/);
+        
+        if (linkMatch) {
+          const link = linkMatch[2];
+          
+          // Check for dev: true on the same line or nearby lines (within 3 lines before)
+          let hasDev = false;
+          for (let j = Math.max(0, i - 3); j <= i; j++) {
+            if (lines[j].includes('dev:') && lines[j].includes('true')) {
+              hasDev = true;
+              break;
+            }
+          }
+          
+          // On main branch: skip pages with dev: true
+          // On other branches: include all pages
+          if (isMainBranch && hasDev) {
+            console.log(`  Skipping dev page: ${link}`);
+            continue;
+          }
+          
+          routes.add(link);
         }
       }
       
