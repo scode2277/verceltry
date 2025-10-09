@@ -189,20 +189,47 @@ async function main() {
     });
   }
 
+  // Check if we're on main branch (same logic as vocs.config.ts filterDevItems)
+  const isMainBranch = process.env.VERCEL_GIT_COMMIT_REF === 'main';
+  console.log(`Branch check: ${isMainBranch ? 'main (filtering dev: true pages)' : 'develop (including all pages)'}`);
+
   // Derive allowed routes from sidebar config (preferred) or fallback to Vercel static output
   let allowedRoutes = undefined;
   if (fs.existsSync(vocsConfigPath)) {
     try {
       const cfg = fs.readFileSync(vocsConfigPath, 'utf8');
-      // Match link: '/path' or link: "/path"
-      const linkRegex = /link:\s*(['"])(.*?)\1/g;
+      
+      // Parse sidebar structure to extract links and their dev flags
+      // Match objects with optional dev flag and link property
+      const itemRegex = /\{\s*(?:[^}]*dev:\s*(true|false)[^}]*)?[^}]*link:\s*(['"])(.*?)\2[^}]*\}/gs;
       const routes = new Set();
       let m;
-      while ((m = linkRegex.exec(cfg)) !== null) {
-        if (m[2]) routes.add(m[2]);
+      while ((m = itemRegex.exec(cfg)) !== null) {
+        const hasDev = m[1] === 'true';
+        const link = m[3];
+        
+        // On main branch: skip pages with dev: true
+        // On other branches: include all pages
+        if (isMainBranch && hasDev) {
+          console.log(`  Skipping dev page: ${link}`);
+          continue;
+        }
+        
+        if (link) routes.add(link);
       }
+      
+      // Fallback: if regex didn't capture dev flags, use simpler link-only regex
+      if (routes.size === 0) {
+        const linkRegex = /link:\s*(['"])(.*?)\1/g;
+        while ((m = linkRegex.exec(cfg)) !== null) {
+          if (m[2]) routes.add(m[2]);
+        }
+      }
+      
       if (routes.size > 0) allowedRoutes = routes;
-    } catch {}
+    } catch (e) {
+      console.warn('Failed to parse vocs.config.ts:', e.message);
+    }
   }
   if (!allowedRoutes && fs.existsSync(vercelStaticDir)) {
     // Fallback: walk .vercel/output/static and collect all directories that contain index.html
