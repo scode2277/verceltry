@@ -187,9 +187,22 @@ async function main() {
     });
   }
 
-  // Derive allowed routes from Vercel static output (preferred) or from vocs.config.ts
+  // Derive allowed routes from sidebar config (preferred) or fallback to Vercel static output
   let allowedRoutes = undefined;
-  if (fs.existsSync(vercelStaticDir)) {
+  if (fs.existsSync(vocsConfigPath)) {
+    try {
+      const cfg = fs.readFileSync(vocsConfigPath, 'utf8');
+      // Match link: '/path' or link: "/path"
+      const linkRegex = /link:\s*(['"])(.*?)\1/g;
+      const routes = new Set();
+      let m;
+      while ((m = linkRegex.exec(cfg)) !== null) {
+        if (m[2]) routes.add(m[2]);
+      }
+      if (routes.size > 0) allowedRoutes = routes;
+    } catch {}
+  }
+  if (!allowedRoutes && fs.existsSync(vercelStaticDir)) {
     // Walk .vercel/output/static and collect all directories that contain index.html
     const stack = [vercelStaticDir];
     const routes = new Set();
@@ -209,21 +222,9 @@ async function main() {
         if (e.isDirectory()) stack.push(path.join(dir, e.name));
       }
     }
-    // Remove obvious non-doc routes
     routes.delete('/');
     routes.delete('/404');
     allowedRoutes = routes;
-  } else if (fs.existsSync(vocsConfigPath)) {
-    try {
-      const cfg = fs.readFileSync(vocsConfigPath, 'utf8');
-      const linkRegex = /link:\s*'([^']+)'/g;
-      const routes = new Set();
-      let m;
-      while ((m = linkRegex.exec(cfg)) !== null) {
-        routes.add(m[1]);
-      }
-      if (routes.size > 0) allowedRoutes = routes;
-    } catch {}
   }
 
   let filteredDocuments = documents;
