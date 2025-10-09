@@ -1,23 +1,25 @@
 /*
   Purpose
-  - Ensure MDX pages that include ESM imports/components are indexed for search.
-  - Vocs’ default indexer renders MDX; render errors (due to imports) yield empty sections.
-  - This script builds a supplemental MiniSearch index by parsing MDX as plain text
-    (no execution) and writes it over the generated search-index-<hash>.json.
+  - Temporary patch for a known Vocs issue where their search indexer skips MDX files
+    containing ESM imports or React components. This is a known open issue on Vocs’ GitHub.
+  - Until Vocs releases an official fix, this script ensures those pages are properly indexed.
+
+  What it does
+  - Builds a MiniSearch index **only** from the files listed in the sidebar (i.e., the ones
+    we explicitly want indexed).
+  - Parses MDX files as plain text, extracting headings and content.
+  - Generates a clean search index that includes all pages — even those with imports.
+  - After the build, it overwrites Vocs’ generated `search-index-<hash>.json`
+    with our patched version in the appropriate Vercel output directory.
 
   High-level flow
-  1) Locate the generated search index file by scanning common output dirs.
-     - /vercel/path0/docs/dist/.vocs (Vercel build path)
-     - .vercel/output/static/.vocs (Vercel static output)
-     - docs/dist/.vocs (local build output)
-  2) Walk docs/pages and extract sections using markdown headings (#, ##, ...).
-  3) Create a MiniSearch index using titles + text (code fences stripped).
-  4) Overwrite the found search-index-<hash>.json and mirror to the other dirs.
-
-  Notes & caveats
-  - We do not execute MDX; imports/components are treated as inert text.
-  - Anchors are derived from headings (slugified). IDs are made unique with ::<i>.
-  - This mirrors the structure Vocs expects (fields: href, html, isPage, text, title, titles).
+  1) Locate the generated search index file by scanning common output paths:
+     - /vercel/path0/docs/dist/.vocs          (Vercel build path)
+     - .vercel/output/static/.vocs            (Vercel static output)
+     - docs/dist/.vocs                        (local build output)
+  2) Collect sidebar-listed docs and extract their content and headings (#, ##, etc.).
+  3) Build a MiniSearch index using titles and text (code tags stripped).
+  4) Overwrite the found `search-index-<hash>.json` and mirror it across other .vocs dirs.
 */
 
 const fs = require('fs');
@@ -34,11 +36,11 @@ const vercelStaticDir = path.join(workspaceRoot, '.vercel', 'output', 'static');
 const vocsConfigPath = path.join(workspaceRoot, 'vocs.config.ts');
 
 function walkFiles(dir, out = []) {
-  // Recursively collect .md/.mdx files
+  // Recursively collect .mdx files
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, entry.name);
     if (entry.isDirectory()) walkFiles(p, out);
-    else if (/\.(md|mdx)$/i.test(entry.name)) out.push(p);
+    else if (/\.mdx$/i.test(entry.name)) out.push(p);
   }
   return out;
 }
@@ -67,7 +69,7 @@ function normalizeSlashes(p) {
 function computeHref(filePath) {
   // Map docs/pages/<path>.mdx to /<path> (index.md[x] collapses to directory route)
   const relFromPages = normalizeSlashes(path.relative(pagesDir, filePath));
-  const withoutExt = relFromPages.replace(/\.(md|mdx)$/i, '');
+  const withoutExt = relFromPages.replace(/\.mdx$/i, '');
   const noIndex = withoutExt.replace(/\/index$/i, '');
   return `/${noIndex}`;
 }
@@ -203,7 +205,8 @@ async function main() {
     } catch {}
   }
   if (!allowedRoutes && fs.existsSync(vercelStaticDir)) {
-    // Walk .vercel/output/static and collect all directories that contain index.html
+    // Fallback: walk .vercel/output/static and collect all directories that contain index.html
+    // (This happens when vocs.config.ts parsing fails or yields no routes)
     const stack = [vercelStaticDir];
     const routes = new Set();
     while (stack.length) {
@@ -222,28 +225,35 @@ async function main() {
         if (e.isDirectory()) stack.push(path.join(dir, e.name));
       }
     }
+    // Remove non-doc routes
     routes.delete('/');
     routes.delete('/404');
     allowedRoutes = routes;
   }
 
+  // Filter documents to only include routes present in the sidebar
   let filteredDocuments = documents;
   if (allowedRoutes && allowedRoutes.size > 0) {
+    // Keep only sections whose base href (without #anchor) is in the allowed set
     filteredDocuments = documents.filter((d) => allowedRoutes.has(d.href.split('#')[0]));
     console.log(`Filtering to sidebar/static routes: ${filteredDocuments.length} of ${documents.length} sections`);
+  } else {
+    console.log(`No sidebar filtering applied; indexing all ${documents.length} sections`);
   }
 
+  // Build the MiniSearch index with the same structure Vocs expects
   const mini = new MiniSearch({
-    fields: ['title', 'titles', 'text'],
-    storeFields: ['href', 'html', 'isPage', 'text', 'title', 'titles'],
+    fields: ['title', 'titles', 'text'], // Fields to index for search
+    storeFields: ['href', 'html', 'isPage', 'text', 'title', 'titles'], // Fields to store in results
   });
 
   await mini.addAllAsync(filteredDocuments);
   const json = mini.toJSON();
 
+  // Write the regenerated index to all discovered .vocs directories
   const payload = JSON.stringify(json);
   for (const target of payloadTargets) {
-    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.mkdirSync(path.dirname(target), { recursive: true });  // Ensure directory exists
     fs.writeFileSync(target, payload);
     console.log(`Search index written (${filteredDocuments.length} sections): ${target}`);
   }

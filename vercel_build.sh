@@ -13,6 +13,6 @@ npm install
 npm run docs:build
 
 # Post-process search index for Vercel & local outputs
-node utils/postprocess-search-index.js
+node utils/search-indexing.js
 
 echo "✅ Vocs build + search index post-processing completed successfully!"
