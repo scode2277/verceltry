@@ -12,4 +12,7 @@ npm install
 # Build the Vocs site
 npm run docs:build
 
-echo "✅ Vocs build completed successfully!"
+# Post-process search index for Vercel & local outputs
+node utils/searchbar-indexing.js
+
+echo "✅ Vocs build + search index post-processing completed successfully!"
