@@ -8,17 +8,18 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "docs:dev": "npm run generate-tags && vocs dev",
-    "docs:build": "npm run generate-tags && vocs build",
-    "docs:preview": "vocs preview",
+    "docs:dev": "pnpm run generate-tags && vocs dev",
+    "docs:build": "pnpm run generate-tags && vocs build",
     "generate-tags": "node utils/tags-fetcher.js"
   },
+  "packageManager": "pnpm@10.15.0",
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "glob": "^11.0.3",
     "gray-matter": "^4.0.3",
+    "minisearch": "^6.3.0",
     "markdown-it": "^14.1.0",
     "mermaid": "^11.11.0",
     "playwright": "^1.55.0",

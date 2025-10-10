@@ -7,19 +7,23 @@
   What it does
   - Builds a MiniSearch index **only** from the files listed in the sidebar (i.e., the ones
     we explicitly want indexed).
+  - Respects branch-based filtering: on main branch, excludes pages marked with dev: true
+    (matching the sidebar filtering logic in vocs.config.ts).
   - Parses MDX files as plain text, extracting headings and content.
   - Generates a clean search index that includes all pages — even those with imports.
   - After the build, it overwrites Vocs’ generated `search-index-<hash>.json`
     with our patched version in the appropriate Vercel output directory.
 
   High-level flow
-  1) Locate the generated search index file by scanning common output paths:
+  1) Check branch via VERCEL_GIT_COMMIT_REF (main vs develop/other).
+  2) Locate the generated search index file by scanning common output paths:
      - /vercel/path0/docs/dist/.vocs          (Vercel build path)
      - .vercel/output/static/.vocs            (Vercel static output)
      - docs/dist/.vocs                        (local build output)
-  2) Collect sidebar-listed docs and extract their content and headings (#, ##, etc.).
-  3) Build a MiniSearch index using titles and text (code tags stripped).
-  4) Overwrite the found `search-index-<hash>.json` and mirror it across other .vocs dirs.
+  3) Parse vocs.config.ts sidebar to collect allowed routes (excluding dev: true on main).
+  4) Walk docs/pages and extract sections using markdown headings (#, ##, etc.).
+  5) Filter to only allowed routes and build a MiniSearch index (code tags stripped).
+  6) Overwrite the found `search-index-<hash>.json` and mirror it across other .vocs dirs.
 */
 
 const fs = require('fs');
@@ -167,6 +171,9 @@ async function main() {
 
   const files = walkFiles(pagesDir);
   const documents = [];
+  
+  // Track file paths to ensure unique IDs when multiple files map to same route
+  const fileIndex = new Map();
 
   for (const file of files) {
     const raw = fs.readFileSync(file, 'utf8');
@@ -174,9 +181,15 @@ async function main() {
     if (sections.length === 0) continue;
 
     const hrefBase = computeHref(file);
+    
+    // Generate unique file suffix if this href was already seen
+    const fileCount = fileIndex.get(hrefBase) || 0;
+    fileIndex.set(hrefBase, fileCount + 1);
+    const fileSuffix = fileCount > 0 ? `_f${fileCount}` : '';
+    
     sections.forEach((section, i) => {
       const href = `${hrefBase}#${section.anchor}`;
-      const id = `${href}::${i}`; // ensure unique ID even if anchors repeat
+      const id = `${href}${fileSuffix}::${i}`; // ensure unique ID even if multiple files map to same route
       documents.push({
         href,
         html: '',

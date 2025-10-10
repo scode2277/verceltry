@@ -7,10 +7,10 @@ echo "Running Vercel prebuild for Vocs with manual Chromium..."
 mkdir -p docs/pages
 
 # Install dependencies
-npm install
+pnpm install --frozen-lockfile
 
 # Build the Vocs site
-npm run docs:build
+pnpm run docs:build
 
 # Post-process search index for Vercel & local outputs
 node utils/searchbar-indexing.js
