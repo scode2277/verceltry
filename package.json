@@ -9,8 +9,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "docs:dev": "pnpm run generate-tags && vocs dev",
-    "docs:build": "pnpm run generate-tags && vocs build",
-    "generate-tags": "node utils/tags-fetcher.js"
+    "docs:build": "pnpm run sync-contributing && pnpm run generate-tags && vocs build",
+    "generate-tags": "node utils/tags-fetcher.js",
+    "sync-contributing": "node utils/sync-contributing.js"
   },
   "packageManager": "pnpm@10.15.0",
   "keywords": [],
