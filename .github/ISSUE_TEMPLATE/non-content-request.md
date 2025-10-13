@@ -1,5 +1,5 @@
 ---
-name: General Issue
+name: Non Content Request
 about: Strategy, tech, or other non-content related issues
 title: ''
 labels: ''
