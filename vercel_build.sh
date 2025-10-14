@@ -12,7 +12,4 @@ pnpm install --frozen-lockfile
 # Build the Vocs site
 pnpm run docs:build
 
-# Post-process search index for Vercel & local outputs
-node utils/searchbar-indexing.js
-
 echo "✅ Vocs build + search index post-processing completed successfully!"
