@@ -23,7 +23,9 @@ import { TagList, AttributionList, TagProvider, TagFilter, ContributeFooter } fr
 <TagList tags={frontmatter.tags} />
 <AttributionList contributors={frontmatter.contributors} />
 
-> 🔑 **Key Takeaway**: Understanding the various ways attackers can target you and your organization is essential for effective defense. By recognizing common attack patterns like phishing, social engineering, and emerging threats in digital spaces, you can better protect yourself and your team from potential security breaches.
+> 🔑 **Key Takeaway**: Understanding the various ways attackers can target you and your organization is essential for
+effective defense. By recognizing common attack patterns like phishing, social engineering, and emerging threats in
+digital spaces, you can better protect yourself and your team from potential security breaches.
 
 ## 2.1. Traditional Attack Vectors
 
@@ -39,7 +41,8 @@ Attackers may use text messages or direct social media messages to bypass email 
 
 - **Voice Phishing (Vishing):**
 Phone calls that pretend to be from a trusted organization, often using spoofed caller IDs.
-**Scenario Example:** A staff member receives a voicemail warning about a potential security breach and instructing them to call a specific number immediately.
+**Scenario Example:** A staff member receives a voicemail warning about a potential security breach and instructing
+them to call a specific number immediately.
 
 - **Pretexting:**
 Attackers create a fabricated scenario to steal personal information or gain access.
@@ -51,17 +54,20 @@ Offering something enticing to entrap the victim.
 
 - **Tailgating:**
 Physically following authorized personnel into restricted areas without proper credentials.
-**Scenario Example:** An unknown person following an employee through a secure door by claiming they forgot their access card.
+**Scenario Example:** An unknown person following an employee through a secure door by claiming they forgot their
+access card.
 
 - **Shoulder Surfing:**
 Observing someone's screen, keyboard, or device to gather information.
-**Scenario Example:** A threat actor monitoring your screen in a shared co-working space to capture sensitive information or credentials.
+**Scenario Example:** A threat actor monitoring your screen in a shared co-working space to capture sensitive
+information or credentials.
 
 ### 2.1.2. Malware & Technical Attacks
 
 - **Ransomware:**
 Malicious software that encrypts files and demands payment for decryption.
-**Scenario Example:** An organization finds their critical files encrypted with a ransom note demanding cryptocurrency payment.
+**Scenario Example:** An organization finds their critical files encrypted with a ransom note demanding cryptocurrency
+payment.
 
 - **Man-in-the-Middle Attacks:**
 Intercepting communications between two parties.
@@ -69,30 +75,40 @@ Intercepting communications between two parties.
 
 - **Credential Stuffing:**
 Using stolen username/password combinations to attempt access to multiple services.
-**Scenario Example:** After a data breach at one service, attackers try the same credentials on financial or email accounts.
+**Scenario Example:** After a data breach at one service, attackers try the same credentials on financial or email
+accounts.
 
 ## 2.2. Web3-Specific Threats
 
 ### 2.2.1. Crypto-Focused Attacks
 
 - **Crypto Drainers:**
-A common attack where a threat actor suggests users can participate in an airdrop by visiting a provided link. Unsuspecting users who click the link are directed to a counterfeit website, where they are asked to authenticate their wallet and sign a transaction. Once signed, the threat actor gains access to steal funds from the wallet.
+A common attack where a threat actor suggests users can participate in an airdrop by visiting a provided link.
+Unsuspecting users who click the link are directed to a counterfeit website, where they are asked to authenticate their
+wallet and sign a transaction. Once signed, the threat actor gains access to steal funds from the wallet.
 
 - **Rug Pulls:**
-In the context of web3 and cryptocurrencies, these scams typically involve fraudulent schemes designed to swindle individuals out of their digital assets. For example, an enticing new project may promise revolutionary technology and unprecedented returns. However, the project developers quickly vanish, leaving investors with worthless tokens and empty promises.
+In the context of web3 and cryptocurrencies, these scams typically involve fraudulent schemes designed to swindle
+individuals out of their digital assets. For example, an enticing new project may promise revolutionary technology and
+unprecedented returns. However, the project developers quickly vanish, leaving investors with worthless tokens and empty
+promises.
 
 - **Token Approval Exploits:**
-Attackers may trick users into approving smart contracts that give unlimited access to tokens in their wallet. These "allowances" permit the approved contract to transfer any amount of a specific token without further permission. Always verify what permissions you're granting when signing transactions and set specific approval limits when possible.
+Attackers may trick users into approving smart contracts that give unlimited access to tokens in their wallet.
+These "allowances" permit the approved contract to transfer any amount of a specific token without further permission.
+Always verify what permissions you're granting when signing transactions and set specific approval limits when possible.
 
 ### 2.2.2. Smart Contract Vulnerabilities
 
 - **Reentrancy Attacks:**
 Exploiting a contract's execution flow to repeatedly withdraw funds.
-**Scenario Example:** A malicious contract calls back into the victim contract before the first execution is complete, draining funds with each call.
+**Scenario Example:** A malicious contract calls back into the victim contract before the first execution is complete,
+draining funds with each call.
 
 - **Flash Loan Attacks:**
 Using uncollateralized loans to manipulate market prices and exploit vulnerabilities.
-**Scenario Example:** An attacker borrows a large amount of cryptocurrency, manipulates a price oracle, exploits a vulnerability, and repays the loan in a single transaction.
+**Scenario Example:** An attacker borrows a large amount of cryptocurrency, manipulates a price oracle,
+exploits a vulnerability, and repays the loan in a single transaction.
 
 ## 2.3. Common Indicators & Red Flags
 
@@ -136,29 +152,33 @@ Slowdowns, crashes, or unexpected pop-ups.
 ### 2.4.1. General Security Practices
 
 - **Double-Check Requests:**
-Always verify the identity of individuals requesting sensitive information, especially if the request is unusual or urgent.
-**Scenario Example:** If you receive an email from your CEO asking for an urgent wire transfer, call them directly using a known phone number to confirm.
+Always verify the identity of individuals requesting sensitive information, especially if the request is unusual
+or urgent.
+**Scenario Example:** If you receive an email from your CEO asking for an urgent wire transfer, call them directly
+using a known phone number to confirm.
 
 - **Use Secure Channels:**
 Communicate through official channels and avoid sharing sensitive information over unsecured methods.
-**Scenario Example:** Use your organization's established communication platforms rather than responding to external email links.
+**Scenario Example:** Use your organization's established communication platforms rather than responding to external
+email links.
 
 ### 2.4.2. Web3-Specific Protections
 
 - **Check & Remove Token Approvals:**
-Regularly check which smart contracts have approvals to handle funds in your wallet and revoke unnecessary approvals to improve your security posture.
+Regularly check which smart contracts have approvals to handle funds in your wallet and revoke unnecessary approvals
+to improve your security posture.
 **Useful Tools:**
   - [Unrekt](https://app.unrekt.net/)
   - [Etherscan Token Approval Checker](https://etherscan.io/tokenapprovalchecker)
 
 - **Scrutinize Transaction Requests:**
-Never sign a transaction unless you are completely sure exactly what you are signing. Be especially skeptical of offers that seem too good to be true.
+Never sign a transaction unless you are completely sure exactly what you are signing. Be especially skeptical of offers
+that seem too good to be true.
 
 - **Hardware Wallets for Critical Assets:**
 Use hardware wallets for storing significant cryptocurrency holdings.
-**Scenario Example:** Keeping your long-term investments on a hardware wallet while only maintaining small amounts in hot wallets for daily transactions.
-
----
+**Scenario Example:** Keeping your long-term investments on a hardware wallet while only maintaining small amounts in
+hot wallets for daily transactions.
 
 ---
 

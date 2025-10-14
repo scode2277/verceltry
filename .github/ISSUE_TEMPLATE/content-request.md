@@ -14,11 +14,6 @@ assignees: ''
 - [ ] Add new content
 - [ ] Update existing content
 
-## Which framework does this relate to?
-_If you know which framework this belongs to, specify it. Otherwise, leave as "Unknown"_
-
-Framework:
-
 ## What content are you suggesting for?
 _Be as specific as possible. Examples:_
 - New framework about X
