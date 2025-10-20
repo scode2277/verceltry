@@ -247,8 +247,27 @@ jobs:
           }
 
           async function main() {
-            const urls = JSON.parse(process.env.IMAGE_URLS);
-            console.log(`Processing ${urls.length} image(s)...`);
+            // Read URLs from file instead of env var
+            const fs = require('fs');
+            let urls;
+            
+            try {
+              const rawData = fs.readFileSync('urls.json', 'utf8');
+              console.log('Raw urls.json:', rawData);
+              
+              urls = JSON.parse(rawData);
+              
+              // Ensure it's an array
+              if (!Array.isArray(urls)) {
+                throw new Error('urls.json does not contain an array');
+              }
+              
+              console.log(`Processing ${urls.length} image(s)...`);
+              console.log('URLs to process:', urls);
+            } catch (error) {
+              console.error('Failed to read/parse urls.json:', error.message);
+              process.exit(1);
+            }
 
             const results = [];
             for (const url of urls) {
@@ -274,8 +293,10 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-          IMAGE_URLS: ${{ toJSON(steps.extract-urls.outputs.result) }}
         run: |
+          # Write URLs to file to avoid env var encoding issues
+          echo '${{ toJSON(steps.extract-urls.outputs.result) }}' > urls.json
+          
           node process-images.js > output.log 2>&1
           
           # Extract results from log
