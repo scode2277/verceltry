@@ -1,0 +1,35 @@
+{
+    "version": "0.2",
+    "language": "en-US",
+    "languageSettings": [
+        {
+            "languageId": "markdown",
+            "locale": "en-US"
+        }
+    ],
+    "ignorePaths": [
+        "node_modules",
+        "dist",
+        ".git",
+        ".next",
+        "/docs/pages/config/contributors.json",
+        "/docs/public",
+        "./justfile"
+    ],
+    "dictionaryDefinitions": [
+        {
+            "name": "project-words",
+            "path": "./wordlist.txt",
+            "addWords": true
+        }
+    ],
+    "ignoreRegExpList": [
+        "users:\\s*\\[[^\\]]*\\]",
+        "```[a-zA-Z0-9]*[\\s\\S]*?```"
+
+    ],
+    "dictionaries": [
+        "project-words"
+    ],
+    "allowCompoundWords": true
+}
