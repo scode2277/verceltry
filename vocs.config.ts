@@ -1,18 +1,7 @@
-import { defineConfig, ColorScheme } from 'vocs'
+import { defineConfig } from 'vocs'
 
 const config = {
-  
   banner: {
-    themeConfig: {
-      search: {
-        provider: 'algolia',
-        options: {
-          appId: '4I4DXUW54S',
-          apiKey: '9e5532a0dbb1cac81668f18ece1f47c2',
-          indexName: 'frameworks-test',
-        },
-      },
-    },
     content: '***This is a work in progress and not a release. We are looking for volunteers. See [Issues](https://github.com/security-alliance/frameworks/issues) and [Contribution](https://github.com/security-alliance/frameworks/blob/develop/docs/pages/contribute/contributing.mdx) to know how to collaborate.***',
     height: '30px',
     backgroundColor: '#8b5cf6',
@@ -23,7 +12,6 @@ const config = {
   description: 'Comprehensive security framework documentation for Web3 projects and blockchain security best practices.',
   logoUrl: '/logo/frameworks-full.svg',
   iconUrl: '/logo/favicon.svg',
-  colorScheme: 'dark' as ColorScheme,
     sidebar: [
     {
       text: 'Introduction',
@@ -416,7 +404,7 @@ function filterDevItems(items: any[]): any[] {
     }))
 }
 
-if (process.env.VERCEL_GIT_COMMIT_REF === 'main') {
+if (process.env.CF_PAGES_BRANCH === 'main') {
   config.sidebar = filterDevItems(config.sidebar)
 }
 
