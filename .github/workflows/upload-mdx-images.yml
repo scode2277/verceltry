@@ -285,7 +285,17 @@ jobs:
           });
           SCRIPT_EOF
 
-      # Step 6: Process and upload images
+      # Step 6: Write URLs to file
+      - name: Write URLs to file
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const urls = ${{ steps.extract-urls.outputs.result }};
+            fs.writeFileSync('urls.json', JSON.stringify(urls, null, 2));
+            console.log('Wrote URLs to urls.json:', urls);
+
+      # Step 7: Process and upload images
       - name: Process and upload images
         id: process
         env:
@@ -294,8 +304,9 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
         run: |
-          # Write URLs to file to avoid env var encoding issues
-          echo '${{ toJSON(steps.extract-urls.outputs.result) }}' > urls.json
+          # Show what we're processing
+          echo "URLs to process:"
+          cat urls.json
           
           node process-images.js > output.log 2>&1
           
@@ -306,7 +317,7 @@ jobs:
           # Show full log for debugging
           cat output.log
 
-      # Step 7: Comment results back to PR
+      # Step 8: Comment results back to PR
       - name: Comment results
         uses: actions/github-script@v7
         with:
