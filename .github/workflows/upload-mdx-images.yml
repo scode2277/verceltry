@@ -49,6 +49,7 @@ jobs:
             
             // Extract URLs from comment (supports multiple formats)
             // Matches: http://, https://, www.
+            // IMPORTANT: [^\s]+ captures everything including hash fragments (#)
             const urlRegex = /(https?:\/\/[^\s]+)/g;
             const urls = comment.match(urlRegex) || [];
             
@@ -62,9 +63,9 @@ jobs:
               throw new Error('No image URLs found in comment. Please provide URLs after /approve-images');
             }
             
-            console.log('Found URLs:', imageUrls);
+            console.log('Extracted URLs with hash fragments:', imageUrls);
             
-            // Save URLs for next steps
+            // Save URLs for next steps - must preserve hash fragments
             return imageUrls;
           result-encoding: json
 
@@ -77,7 +78,7 @@ jobs:
       # Step 4: Install dependencies
       - name: Install dependencies
         run: |
-          npm install @aws-sdk/client-s3 @aws-sdk/lib-storage axios sharp uuid
+          npm install @aws-sdk/client-s3 @aws-sdk/lib-storage axios sharp uuid cheerio
 
       # Step 5: Create the image processing script
       - name: Create processing script
@@ -90,6 +91,7 @@ jobs:
           const { v4: uuidv4 } = require('uuid');
           const crypto = require('crypto');
           const path = require('path');
+          const cheerio = require('cheerio');
 
           // Configuration
           const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -105,6 +107,88 @@ jobs:
               secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
             }
           });
+
+          async function extractDirectImageUrl(url) {
+            console.log(`Checking if URL needs extraction: ${url}`);
+            
+            // Handle LimeWire sharing links
+            if (url.includes('limewire.com/d/')) {
+              console.log('Detected LimeWire link, extracting direct image URL...');
+              try {
+                const response = await axios({
+                  url,
+                  method: 'GET',
+                  timeout: 30000,
+                  headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                  }
+                });
+                
+                const $ = cheerio.load(response.data);
+                
+                // Try multiple methods to find the image
+                let imageUrl = null;
+                
+                // Method 1: Look for og:image meta tag
+                imageUrl = $('meta[property="og:image"]').attr('content');
+                
+                // Method 2: Look for img tags with limewire URLs
+                if (!imageUrl) {
+                  imageUrl = $('img[src*="limewire"]').first().attr('src');
+                }
+                
+                // Method 3: Look for any img tag in main content
+                if (!imageUrl) {
+                  imageUrl = $('img').filter((i, el) => {
+                    const src = $(el).attr('src');
+                    return src && !src.includes('logo') && !src.includes('icon');
+                  }).first().attr('src');
+                }
+                
+                // Method 4: Check for data attributes
+                if (!imageUrl) {
+                  const dataUrl = $('[data-url]').first().attr('data-url');
+                  const dataSrc = $('[data-src]').first().attr('data-src');
+                  imageUrl = dataUrl || dataSrc;
+                }
+                
+                if (imageUrl) {
+                  // Handle relative URLs
+                  if (imageUrl.startsWith('//')) {
+                    imageUrl = 'https:' + imageUrl;
+                  } else if (imageUrl.startsWith('/')) {
+                    const urlObj = new URL(url);
+                    imageUrl = urlObj.origin + imageUrl;
+                  }
+                  
+                  console.log(`Extracted direct image URL: ${imageUrl}`);
+                  return imageUrl;
+                }
+                
+                throw new Error('Could not extract direct image URL from LimeWire page. Please use a direct image URL instead.');
+              } catch (error) {
+                throw new Error(`Failed to extract image from LimeWire: ${error.message}. Please download the image and use a direct image URL (e.g., from Imgur, GitHub, or other direct hosting).`);
+              }
+            }
+            
+            // Handle other common file-sharing services
+            const fileSharingServices = [
+              'dropbox.com',
+              'drive.google.com',
+              'onedrive.live.com',
+              'wetransfer.com',
+              'mediafire.com'
+            ];
+            
+            for (const service of fileSharingServices) {
+              if (url.includes(service)) {
+                throw new Error(`Detected ${service} link. Please use a direct image URL instead. You can upload to services like Imgur, GitHub issues, or use a CDN that provides direct image URLs.`);
+              }
+            }
+            
+            // If not a file-sharing service, return the original URL
+            return url;
+          }
 
           async function downloadImage(url) {
             console.log(`Downloading: ${url}`);
@@ -209,8 +293,11 @@ jobs:
 
           async function processImage(url) {
             try {
+              // Extract direct image URL if needed
+              const directUrl = await extractDirectImageUrl(url);
+              
               // Download
-              const buffer = await downloadImage(url);
+              const buffer = await downloadImage(directUrl);
               
               // Validate and get metadata
               const metadata = await validateImage(buffer, url);
@@ -288,12 +375,16 @@ jobs:
       # Step 6: Write URLs to file
       - name: Write URLs to file
         uses: actions/github-script@v7
+        env:
+          URLS_JSON: ${{ steps.extract-urls.outputs.result }}
         with:
           script: |
             const fs = require('fs');
-            const urls = ${{ steps.extract-urls.outputs.result }};
+            // Read from env var to preserve special characters like #
+            const urls = JSON.parse(process.env.URLS_JSON);
             fs.writeFileSync('urls.json', JSON.stringify(urls, null, 2));
             console.log('Wrote URLs to urls.json:', urls);
+            console.log('Verified hash fragments preserved:', urls.map(u => u.includes('#') ? '✓ has #' : '✗ missing #'));
 
       # Step 7: Process and upload images
       - name: Process and upload images
