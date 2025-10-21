@@ -3,7 +3,7 @@ import { defineConfig } from 'vocs'
 const config = {
   ogImageUrl: {
     
-    '/': 'https://frameworks-static.s3.us-east-2.amazonaws.com/images/safe-harbor/whitehat-full-logo-blue.svg',
+    '/': 'https://frameworks-static.s3.us-east-2.amazonaws.com/images/safe-harbor/legal.png',
   },
   banner: {
     content: '***This is a work in progress and not a release. We are looking for volunteers. See [Issues](https://github.com/security-alliance/frameworks/issues) and [Contribution](https://github.com/security-alliance/frameworks/blob/develop/docs/pages/contribute/contributing.mdx) to know how to collaborate.***',
