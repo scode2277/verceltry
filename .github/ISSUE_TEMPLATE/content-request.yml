@@ -1,10 +1,8 @@
-name: "Content Request"
-description: "Request new content or updates to existing framework content"
+name: Content Request
+description: Request new content or updates to existing framework content
 title: ""
-labels:
-  - "content"
+labels: ["content:add"]
 assignees: []
-
 body:
   - type: markdown
     attributes:
