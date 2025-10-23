@@ -19,7 +19,7 @@ body:
       options:
         - label: "Add new content"
         - label: "Update existing content"
-      validations:
+    validations:
       required: true
 
   - type: textarea
