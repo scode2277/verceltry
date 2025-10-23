@@ -19,6 +19,8 @@ body:
       options:
         - label: "Add new content"
         - label: "Update existing content"
+      validations:
+      required: true
 
   - type: textarea
     id: suggested_content
