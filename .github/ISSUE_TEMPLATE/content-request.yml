@@ -1,0 +1,50 @@
+name: "Content Request"
+description: "Request new content or updates to existing framework content"
+title: ""
+labels:
+  - "content"
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Title formatting:**
+        - If related to a specific framework: `framework_name Framework: description`
+        - If framework is unknown or general content: `Content(add): description`
+
+  - type: checkboxes
+    id: type_of_request
+    attributes:
+      label: "Type of request"
+      description: "Select what type of content update you’re requesting."
+      options:
+        - label: "Add new content"
+        - label: "Update existing content"
+
+  - type: textarea
+    id: suggested_content
+    attributes:
+      label: "What content are you suggesting?"
+      description: "Be as specific as possible (e.g., new framework about X, update section Z, etc.)"
+      placeholder: "Describe what new or updated content you are requesting."
+    validations:
+      required: true
+
+  - type: textarea
+    id: why_needed
+    attributes:
+      label: "Why is this update or modification needed?"
+      description: "Explain why this change is necessary."
+      placeholder: "Add reasoning or context here."
+    validations:
+      required: false
+
+  - type: textarea
+    id: justification
+    attributes:
+      label: "Can you justify your argument or provide additional resources?"
+      description: "Provide links, data, or references to support your suggestion."
+      placeholder: "Add any helpful resources or evidence here."
+    validations:
+      required: false
