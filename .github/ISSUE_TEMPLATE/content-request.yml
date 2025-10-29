@@ -47,7 +47,7 @@ body:
   - type: textarea
     id: why_needed
     attributes:
-      label: "_If it is not self-explanatory, or relatively clear, add a few sentences explaining why it is needed._"
+      label: _"If it is not self-explanatory, or relatively clear, add a few sentences explaining why it is needed."_
       description: "Explain why this change is necessary."
       placeholder: "Add reasoning or context here."
     validations:
