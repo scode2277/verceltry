@@ -5,15 +5,12 @@ labels: ["content:add"]
 assignees: []
 body:
   - type: dropdown
-    id: download
+    id: type_of_request_try
     attributes:
-      label: How did you download the software?
+      label: Type of request
       options:
-        - Built from source
-        - Homebrew
-        - MacPorts
-        - apt-get
-      multiple: true
+        - Add new content
+        - Update existing content
       default: 0
     validations:
       required: true
