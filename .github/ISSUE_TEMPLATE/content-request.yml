@@ -7,7 +7,7 @@ body:
   - type: dropdown
     id: type_of_request_try
     attributes:
-      label: Type of request
+      label: "Type of request"
       description: "Select what type of content update you’re requesting."
       options:
         - Select...
