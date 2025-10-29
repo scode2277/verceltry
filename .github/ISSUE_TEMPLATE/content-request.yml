@@ -6,9 +6,10 @@ body:
   - type: markdown
     attributes:
       value: |
-        _This form helps us track suggestions for new or updated content across all frameworks._
+        Thank you for taking the time to submit a proposal for adding or updating content on Frameworks.
         
-        _Please be as detailed as possible so we understand what you’d like to change — or so other contributors can pick up your request and fulfill it._
+        _Please be as detailed as possible so we understand what you’d like to change — or so other contributors 
+        can pick up your request and fulfill it._
 
   - type: markdown
     attributes:
