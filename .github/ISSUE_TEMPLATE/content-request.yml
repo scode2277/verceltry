@@ -29,17 +29,6 @@ body:
     validations:
       required: true
 
-  - type: checkboxes
-    id: contribution_intent
-    attributes:
-      label: "Contribution intent"
-      description: "Tell us how you’d like to contribute."
-      options:
-        - label: "I can provide/create this content myself"
-        - label: "I'm identifying a need for others to address"
-    validations:
-      required: true
-
   - type: textarea
     id: suggested_content
     attributes:
@@ -66,3 +55,13 @@ body:
       placeholder: "Add any helpful resources or evidence here."
     validations:
       required: false
+  - type: checkboxes
+    id: contribution_intent
+    attributes:
+      label: "Contribution intent"
+      description: "Tell us how you’d like to contribute."
+      options:
+        - label: "I can provide/create this content myself"
+        - label: "I'm identifying a need for others to address"
+    validations:
+      required: true
