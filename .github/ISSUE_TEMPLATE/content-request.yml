@@ -1,7 +1,6 @@
 name: Content Request
 description: Request new content or updates to existing framework content
 title: "Use the guide below to format your title correctly"
-labels: ["documentation"]
 body:
   - type: markdown
     attributes:
@@ -33,7 +32,7 @@ body:
     id: suggested_content
     attributes:
       label: "What content are you suggesting for?"
-      description: "Be as specific as possible (e.g., new framework about X, new page on Y framework, update section Z in [framework] to include..., etc.)"
+      description: "Be as specific as possible (e.g., new framework about X, new page on Y framework, update section Z in [framework] to include, etc.)"
       placeholder: "Describe what new or updated content you are requesting."
     validations:
       required: true
@@ -55,6 +54,7 @@ body:
       placeholder: "Add any helpful resources or evidence here."
     validations:
       required: false
+  
   - type: checkboxes
     id: contribution_intent
     attributes:
