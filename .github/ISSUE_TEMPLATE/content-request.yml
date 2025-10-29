@@ -13,9 +13,9 @@ body:
         - Select...
         - Add new content
         - Update existing content
-      default: 0
     validations:
       required: true
+      
   - type: markdown
     attributes:
       value: |
