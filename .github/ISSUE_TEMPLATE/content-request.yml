@@ -6,8 +6,10 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thank you for taking the time to put together a proposal for adding/updating content on Frameworks.
-        
+        Thank you for opening a content request!
+        This form helps us track suggestions for new or updated content across all frameworks.
+        Please be as detailed as possible so we understand what you’d like to change — or so other contributors can pick up your request and fulfill it.
+
   - type: markdown
     attributes:
       value: |
