@@ -1,6 +1,6 @@
-name: New content or feature suggestion
-description: Proposals for new content or features on MDN Web Docs
-title: Enter your proposal here
+name: "Content Request"
+description: "Request new content or updates to existing framework content"
+title: "Use the guide below to format your title correctly"
 body:
   #initial description
   - type: markdown
