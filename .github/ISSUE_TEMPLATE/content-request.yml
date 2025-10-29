@@ -1,7 +1,7 @@
 name: Content Request
 description: Request new content or updates to existing framework content
 title: "title"
-labels: ["content:add"]
+labels: ["documentation"]
 assignees: []
 body:
   - type: dropdown
