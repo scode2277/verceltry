@@ -1,5 +1,5 @@
 name: Non Content Request
-description: Strategy, tech, or other non-content related issues
+description: Strategy, tech, or other non-content related issues and ideas.
 body:
   - type: markdown
     attributes:
@@ -43,7 +43,7 @@ body:
     id: justification
     attributes:
       label: "Can you justify your argument or provide additional resources?"
-      description: "Here add as many resources as you can to sustain your argument."
+      description: "Add any resources or references that support your idea or help explain your reasoning."
       placeholder: "Add any helpful resources or evidence here."
     validations:
       required: false
