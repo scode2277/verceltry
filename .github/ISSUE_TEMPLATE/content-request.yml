@@ -4,6 +4,19 @@ title: "title"
 labels: ["content:add"]
 assignees: []
 body:
+  - type: dropdown
+    id: download
+    attributes:
+      label: How did you download the software?
+      options:
+        - Built from source
+        - Homebrew
+        - MacPorts
+        - apt-get
+      multiple: true
+      default: 0
+    validations:
+      required: true
   - type: markdown
     attributes:
       value: |
