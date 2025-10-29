@@ -1,6 +1,7 @@
 name: Content Request
 description: Request new content or updates to existing framework content
 title: "Use the guide below to format your title correctly"
+labels: ["documentation"]
 body:
   - type: markdown
     attributes:
