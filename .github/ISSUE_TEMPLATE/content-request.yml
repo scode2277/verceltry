@@ -1,15 +1,12 @@
-name: "Content Request"
-description: "Request new content or updates to existing framework content"
+name: Content Request
+description: Request new content or updates to existing framework content
 title: "Use the guide below to format your title correctly"
 body:
-  #initial description
   - type: markdown
     attributes:
       value: |
         Thank you for taking the time to put together a proposal for adding/updating content on Frameworks.
         
-  
-  #title
   - type: markdown
     attributes:
       value: |
@@ -17,7 +14,6 @@ body:
         - If related to a specific framework: `framework_name Framework: description`
         - If framework is unknown or general content: `Content(add): description`
   
-  #add or  update?
   - type: checkboxes
     id: type_of_request
     attributes:
@@ -28,8 +24,7 @@ body:
         - label: "Update existing content"
     validations:
       required: true
-  
-  #Contribution intent
+
   - type: checkboxes
     id: contribution_intent
     attributes:
@@ -41,7 +36,6 @@ body:
     validations:
       required: true
 
-  #what
   - type: textarea
     id: suggested_content
     attributes:
@@ -51,7 +45,6 @@ body:
     validations:
       required: true
 
-  ## Why
 - type: textarea
     id: why_needed
     attributes:
@@ -61,7 +54,6 @@ body:
     validations:
       required: false
 
-  #resources
   - type: textarea
     id: justification
     attributes:
