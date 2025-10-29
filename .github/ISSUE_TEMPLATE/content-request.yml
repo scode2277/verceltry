@@ -9,6 +9,7 @@ body:
     attributes:
       label: Type of request
       options:
+        - Select...
         - Add new content
         - Update existing content
       default: 0
