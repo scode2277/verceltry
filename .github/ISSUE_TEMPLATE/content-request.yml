@@ -46,7 +46,7 @@ body:
     validations:
       required: true
 
-- type: textarea
+  - type: textarea
     id: why_needed
     attributes:
       label: "Why do you think this update or modification is needed"
