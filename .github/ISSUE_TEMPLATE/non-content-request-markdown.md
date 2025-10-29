@@ -1,5 +1,5 @@
 ---
-name: Non Content Request
+name: Non Content Request Markdown
 about: Strategy, tech, or other non-content related issues
 title: ''
 labels: ''
