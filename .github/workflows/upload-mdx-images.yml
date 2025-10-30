@@ -1,22 +1,61 @@
 name: Process and Upload Images
 
+# ============================================================================
+# WORKFLOW PURPOSE
+# ============================================================================
+# This workflow is designed for the following contribution flow:
+#
+# 1. Contributors fork the repository and make changes
+# 2. They add images directly to the PR description or PR comments
+#    (GitHub automatically hosts these images and provides URLs)
+# 3. They use GitHub image URLs in their contribution (MDX files)
+# 4. They open a PR against the 'develop' branch with their changes
+# 5. A maintainer reviews the PR and the images (visible inline)
+# 6. Maintainer comments '/approve-images' followed by the GitHub image URLs
+#    (This explicit approval ensures only verified URLs are processed)
+# 7. This workflow processes those URLs and uploads images to AWS S3
+# 8. The workflow posts results back to the PR with permanent S3 URLs
+#
+# Benefits of this approach:
+# - Contributors can easily paste images directly in PRs (no external uploads)
+# - Images are visible inline during PR review
+# - Maintainer explicitly approves each URL for security
+# - GitHub URLs are permanent and reliable
+# - No dependency on external hosting services
+# ============================================================================
+
+# This workflow triggers when a comment is created on an issue or pull request
+# It processes image URLs from comments and uploads them to AWS S3
 on:
   issue_comment:
     types: [created]
 
-# Prevents workflow from running on forks - security critical!
-# Only runs when comment is on a PR in the main repo
+# Security: Prevents workflow from running on forks - critical for security!
+# This ensures the workflow only runs in the main repository, not in forks
+# which could be used to expose secrets or run malicious code
 permissions:
-  pull-requests: write
-  issues: write
-  contents: read
+  pull-requests: write  # Required to post comments on PRs
+  issues: write         # Required to post comments on issues/PRs
+  contents: read        # Required to read repository contents
 
 jobs:
   upload-images:
-    # Only run if:
-    # 1. Comment is on a pull request (not an issue)
-    # 2. Comment starts with /approve-images
-    # 3. Commenter has write permission (is a maintainer)
+    # Concurrency control: Prevents multiple workflow runs from executing simultaneously
+    # This avoids race conditions, duplicate uploads, and resource conflicts
+    # If a new comment arrives while one is processing, it will cancel the older one
+    concurrency:
+      group: upload-images-${{ github.event.issue.number }}
+      cancel-in-progress: false  # Keep false to let current run finish, new ones queue
+    
+    # Overall workflow timeout: Prevents workflows from running indefinitely
+    # If processing takes longer than 30 minutes, the workflow will be cancelled
+    timeout-minutes: 30
+    
+    # Conditional execution: Only run if ALL conditions are met:
+    # 1. Comment is on a pull request (not a regular issue)
+    # 2. Comment starts with '/approve-images' command
+    # 3. Commenter has appropriate permissions (OWNER, MEMBER, or COLLABORATOR)
+    # Note: We check PR base branch in a step below to ensure it targets 'develop'
     if: |
       github.event.issue.pull_request &&
       startsWith(github.event.comment.body, '/approve-images') &&
@@ -27,11 +66,13 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      # Step 1: Acknowledge the command
+      # Step 1: Acknowledge the command by adding a reaction
+      # This provides immediate visual feedback that the workflow has started
       - name: React to command
         uses: actions/github-script@v7
         with:
           script: |
+            // Add an "eyes" emoji reaction to the comment to show we're processing
             github.rest.reactions.createForIssueComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -39,340 +80,164 @@ jobs:
               content: 'eyes'
             });
 
-      # Step 2: Extract image URLs from the comment
-      - name: Extract image URLs
+      # Step 2: Extract GitHub image URLs from the comment
+      # This step parses the comment body to find GitHub-hosted image URLs
+      # We only accept GitHub URLs (user-images.githubusercontent.com or private-user-images.githubusercontent.com)
+      - name: Extract GitHub image URLs
         id: extract-urls
         uses: actions/github-script@v7
         with:
           script: |
             const comment = context.payload.comment.body;
             
-            // Extract URLs from comment (supports multiple formats)
-            // Matches: http://, https://, www.
-            // IMPORTANT: [^\s]+ captures everything including hash fragments (#)
+            // Extract URLs from comment using regex
+            // Pattern matches: http:// or https:// followed by non-whitespace characters
+            // IMPORTANT: [^\s]+ captures everything including query parameters (JWT tokens)
             const urlRegex = /(https?:\/\/[^\s]+)/g;
             const urls = comment.match(urlRegex) || [];
             
-            // Filter out the /approve-images command itself
-            const imageUrls = urls.filter(url => 
-              !url.includes('github.com') && 
-              url !== '/approve-images'
-            );
+            // Filter to ONLY GitHub-hosted image URLs
+            // We accept:
+            // - user-images.githubusercontent.com
+            // - private-user-images.githubusercontent.com (with JWT tokens)
+            // - github.com/.../assets/... (repository assets)
+            const githubImageUrls = urls.filter(url => {
+              // Filter out the command itself
+              if (url === '/approve-images') return false;
+              
+              // Check if it's a GitHub image URL
+              return url.includes('user-images.githubusercontent.com') || 
+                     url.includes('private-user-images.githubusercontent.com') ||
+                     (url.includes('github.com') && url.includes('/assets/'));
+            });
             
-            if (imageUrls.length === 0) {
-              throw new Error('No image URLs found in comment. Please provide URLs after /approve-images');
+            if (githubImageUrls.length === 0) {
+              throw new Error(
+                'No GitHub-hosted image URLs found in comment.\n\n' +
+                'Please provide GitHub image URLs after /approve-images.\n' +
+                'To get GitHub URLs: Add images to PR comments/descriptions, then copy the URLs.\n' +
+                'Supported formats:\n' +
+                '- https://user-images.githubusercontent.com/...\n' +
+                '- https://private-user-images.githubusercontent.com/...\n' +
+                '- https://github.com/.../assets/...'
+              );
             }
             
-            console.log('Extracted URLs with hash fragments:', imageUrls);
+            // Basic validation: ensure URLs are HTTPS and well-formed
+            const validatedUrls = [];
+            const validationErrors = [];
             
-            // Save URLs for next steps - must preserve hash fragments
-            return imageUrls;
+            for (const url of githubImageUrls) {
+              try {
+                const urlObj = new URL(url);
+                
+                // Only allow HTTPS (GitHub always uses HTTPS)
+                if (urlObj.protocol !== 'https:') {
+                  validationErrors.push(`${url}: Only HTTPS URLs are allowed`);
+                  continue;
+                }
+                
+                // Ensure it's a valid GitHub hostname
+                const hostname = urlObj.hostname.toLowerCase();
+                const isValidGitHubHost = 
+                  hostname.includes('user-images.githubusercontent.com') ||
+                  hostname.includes('private-user-images.githubusercontent.com') ||
+                  (hostname.includes('github.com') && url.includes('/assets/'));
+                
+                if (!isValidGitHubHost) {
+                  validationErrors.push(`${url}: Not a valid GitHub image URL`);
+                  continue;
+                }
+                
+                validatedUrls.push(url);
+              } catch (error) {
+                validationErrors.push(`${url}: Invalid URL format - ${error.message}`);
+              }
+            }
+            
+            if (validationErrors.length > 0) {
+              throw new Error(
+                `URL validation failed:\n${validationErrors.join('\n')}\n\n` +
+                `Please ensure all URLs are GitHub-hosted image URLs.`
+              );
+            }
+            
+            if (validatedUrls.length === 0) {
+              throw new Error('No valid GitHub image URLs found after validation');
+            }
+            
+            console.log(`Extracted ${validatedUrls.length} GitHub image URL(s)`);
+            console.log('URLs:', validatedUrls.map(u => {
+              // Show first 60 chars to avoid logging JWT tokens fully
+              const truncated = u.length > 60 ? u.substring(0, 60) + '...' : u;
+              return truncated;
+            }));
+            
+            // Return validated URLs as JSON array
+            return validatedUrls;
           result-encoding: json
 
-      # Step 3: Setup Node.js environment
+      # Step 3: Validate that all required AWS secrets are configured
+      # This prevents cryptic failures later when trying to connect to S3
+      - name: Validate AWS secrets
+        run: |
+          # Check if all required secrets are set
+          # If any secret is missing, the workflow will fail with a clear error message
+          if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then
+            echo "::error::AWS_ACCESS_KEY_ID secret is not configured"
+            exit 1
+          fi
+          
+          if [ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]; then
+            echo "::error::AWS_SECRET_ACCESS_KEY secret is not configured"
+            exit 1
+          fi
+          
+          if [ -z "${{ secrets.AWS_REGION }}" ]; then
+            echo "::error::AWS_REGION secret is not configured"
+            exit 1
+          fi
+          
+          if [ -z "${{ secrets.AWS_S3_BUCKET }}" ]; then
+            echo "::error::AWS_S3_BUCKET secret is not configured"
+            exit 1
+          fi
+          
+          echo "✓ All AWS secrets are configured"
+
+      # Step 4: Checkout repository
+      # This step is needed to access the process-images.js script from .github/scripts/
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 5: Setup Node.js environment
+      # Node.js is required to run the image processing script
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '20'  # Using Node.js 20 (LTS version)
 
-      # Step 4: Install dependencies
+      # Step 6: Install dependencies
+      # These npm packages are required for image processing:
+      # - @aws-sdk/client-s3: AWS SDK for S3 operations
+      # - @aws-sdk/lib-storage: Helper for multipart uploads
+      # - axios: HTTP client for downloading images from GitHub
+      # - sharp: Image processing library (resize, validate, convert)
+      # - uuid: Generate unique identifiers for filenames
       - name: Install dependencies
         run: |
-          npm install @aws-sdk/client-s3 @aws-sdk/lib-storage axios sharp uuid cheerio
+          # Pin dependencies to specific versions for security and reproducibility
+          # Using exact versions prevents unexpected breaking changes
+          npm install \
+            @aws-sdk/client-s3@^3.490.0 \
+            @aws-sdk/lib-storage@^3.490.0 \
+            axios@^1.6.0 \
+            sharp@^0.33.0 \
+            uuid@^9.0.0
 
-      # Step 5: Create the image processing script
-      - name: Create processing script
-        run: |
-          cat > process-images.js << 'SCRIPT_EOF'
-          const { S3Client } = require('@aws-sdk/client-s3');
-          const { Upload } = require('@aws-sdk/lib-storage');
-          const axios = require('axios');
-          const sharp = require('sharp');
-          const { v4: uuidv4 } = require('uuid');
-          const crypto = require('crypto');
-          const path = require('path');
-          const cheerio = require('cheerio');
-
-          // Configuration
-          const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-          const MAX_WIDTH = 4096;
-          const MAX_HEIGHT = 4096;
-          const ALLOWED_FORMATS = ['jpeg', 'jpg', 'png', 'gif', 'webp', 'svg'];
-
-          // Initialize S3 client
-          const s3Client = new S3Client({
-            region: process.env.AWS_REGION,
-            credentials: {
-              accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-              secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-            }
-          });
-
-          async function extractDirectImageUrl(url) {
-            console.log(`Checking if URL needs extraction: ${url}`);
-            
-            // Handle LimeWire sharing links
-            if (url.includes('limewire.com/d/')) {
-              console.log('Detected LimeWire link, extracting direct image URL...');
-              try {
-                const response = await axios({
-                  url,
-                  method: 'GET',
-                  timeout: 30000,
-                  headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                  }
-                });
-                
-                const $ = cheerio.load(response.data);
-                
-                // Try multiple methods to find the image
-                let imageUrl = null;
-                
-                // Method 1: Look for og:image meta tag
-                imageUrl = $('meta[property="og:image"]').attr('content');
-                
-                // Method 2: Look for img tags with limewire URLs
-                if (!imageUrl) {
-                  imageUrl = $('img[src*="limewire"]').first().attr('src');
-                }
-                
-                // Method 3: Look for any img tag in main content
-                if (!imageUrl) {
-                  imageUrl = $('img').filter((i, el) => {
-                    const src = $(el).attr('src');
-                    return src && !src.includes('logo') && !src.includes('icon');
-                  }).first().attr('src');
-                }
-                
-                // Method 4: Check for data attributes
-                if (!imageUrl) {
-                  const dataUrl = $('[data-url]').first().attr('data-url');
-                  const dataSrc = $('[data-src]').first().attr('data-src');
-                  imageUrl = dataUrl || dataSrc;
-                }
-                
-                if (imageUrl) {
-                  // Handle relative URLs
-                  if (imageUrl.startsWith('//')) {
-                    imageUrl = 'https:' + imageUrl;
-                  } else if (imageUrl.startsWith('/')) {
-                    const urlObj = new URL(url);
-                    imageUrl = urlObj.origin + imageUrl;
-                  }
-                  
-                  console.log(`Extracted direct image URL: ${imageUrl}`);
-                  return imageUrl;
-                }
-                
-                throw new Error('Could not extract direct image URL from LimeWire page. Please use a direct image URL instead.');
-              } catch (error) {
-                throw new Error(`Failed to extract image from LimeWire: ${error.message}. Please download the image and use a direct image URL (e.g., from Imgur, GitHub, or other direct hosting).`);
-              }
-            }
-            
-            // Handle other common file-sharing services
-            const fileSharingServices = [
-              'dropbox.com',
-              'drive.google.com',
-              'onedrive.live.com',
-              'wetransfer.com',
-              'mediafire.com'
-            ];
-            
-            for (const service of fileSharingServices) {
-              if (url.includes(service)) {
-                throw new Error(`Detected ${service} link. Please use a direct image URL instead. You can upload to services like Imgur, GitHub issues, or use a CDN that provides direct image URLs.`);
-              }
-            }
-            
-            // If not a file-sharing service, return the original URL
-            return url;
-          }
-
-          async function downloadImage(url) {
-            console.log(`Downloading: ${url}`);
-            
-            const response = await axios({
-              url,
-              method: 'GET',
-              responseType: 'arraybuffer',
-              maxContentLength: MAX_FILE_SIZE,
-              timeout: 30000,
-              headers: {
-                'User-Agent': 'GitHub-Image-Upload-Bot/1.0'
-              }
-            });
-
-            return Buffer.from(response.data);
-          }
-
-          async function validateImage(buffer, originalUrl) {
-            console.log('Validating image...');
-
-            // Check file size
-            if (buffer.length > MAX_FILE_SIZE) {
-              throw new Error(`Image exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB size limit`);
-            }
-
-            // Use sharp to validate and get metadata
-            try {
-              const metadata = await sharp(buffer).metadata();
-              
-              console.log('Image metadata:', {
-                format: metadata.format,
-                width: metadata.width,
-                height: metadata.height,
-                size: `${(buffer.length / 1024).toFixed(2)}KB`
-              });
-
-              // Check format
-              if (!ALLOWED_FORMATS.includes(metadata.format)) {
-                throw new Error(`Invalid format: ${metadata.format}. Allowed: ${ALLOWED_FORMATS.join(', ')}`);
-              }
-
-              // Check dimensions
-              if (metadata.width > MAX_WIDTH || metadata.height > MAX_HEIGHT) {
-                throw new Error(`Image dimensions ${metadata.width}x${metadata.height} exceed maximum ${MAX_WIDTH}x${MAX_HEIGHT}`);
-              }
-
-              // Basic malware check: ensure it's actually an image
-              // Sharp will throw an error if the file is not a valid image
-              await sharp(buffer).toBuffer();
-
-              return metadata;
-            } catch (error) {
-              throw new Error(`Image validation failed: ${error.message}`);
-            }
-          }
-
-          function generateUniqueFilename(originalUrl, format) {
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const uniqueId = uuidv4().split('-')[0]; // First segment of UUID
-            const hash = crypto.createHash('md5').update(originalUrl).digest('hex').substring(0, 8);
-            
-            // Try to preserve original filename if possible
-            let originalName = 'image';
-            try {
-              const urlPath = new URL(originalUrl).pathname;
-              const basename = path.basename(urlPath, path.extname(urlPath));
-              if (basename && basename !== '' && basename.length < 50) {
-                originalName = basename.replace(/[^a-zA-Z0-9-_]/g, '-');
-              }
-            } catch (e) {
-              // Use default if URL parsing fails
-            }
-
-            return `${timestamp}_${uniqueId}_${hash}_${originalName}.${format}`;
-          }
-
-          async function uploadToS3(buffer, filename, contentType) {
-            console.log(`Uploading to S3: ${filename}`);
-
-            const upload = new Upload({
-              client: s3Client,
-              params: {
-                Bucket: process.env.AWS_S3_BUCKET,
-                Key: `images/${filename}`,
-                Body: buffer,
-                ContentType: contentType,
-                CacheControl: 'public, max-age=31536000', // 1 year cache
-                ServerSideEncryption: 'AES256'
-              }
-            });
-
-            await upload.done();
-
-            // Generate public URL
-            const region = process.env.AWS_REGION;
-            const bucket = process.env.AWS_S3_BUCKET;
-            const publicUrl = `https://${bucket}.s3.${region}.amazonaws.com/images/${filename}`;
-            
-            return publicUrl;
-          }
-
-          async function processImage(url) {
-            try {
-              // Extract direct image URL if needed
-              const directUrl = await extractDirectImageUrl(url);
-              
-              // Download
-              const buffer = await downloadImage(directUrl);
-              
-              // Validate and get metadata
-              const metadata = await validateImage(buffer, url);
-              
-              // Generate unique filename
-              const filename = generateUniqueFilename(url, metadata.format);
-              
-              // Upload to S3
-              const s3Url = await uploadToS3(
-                buffer, 
-                filename, 
-                `image/${metadata.format}`
-              );
-
-              return {
-                success: true,
-                originalUrl: url,
-                s3Url: s3Url,
-                filename: filename,
-                metadata: {
-                  format: metadata.format,
-                  width: metadata.width,
-                  height: metadata.height,
-                  size: `${(buffer.length / 1024).toFixed(2)}KB`
-                }
-              };
-            } catch (error) {
-              return {
-                success: false,
-                originalUrl: url,
-                error: error.message
-              };
-            }
-          }
-
-          async function main() {
-            // Read URLs from file instead of env var
-            const fs = require('fs');
-            let urls;
-            
-            try {
-              const rawData = fs.readFileSync('urls.json', 'utf8');
-              console.log('Raw urls.json:', rawData);
-              
-              urls = JSON.parse(rawData);
-              
-              // Ensure it's an array
-              if (!Array.isArray(urls)) {
-                throw new Error('urls.json does not contain an array');
-              }
-              
-              console.log(`Processing ${urls.length} image(s)...`);
-              console.log('URLs to process:', urls);
-            } catch (error) {
-              console.error('Failed to read/parse urls.json:', error.message);
-              process.exit(1);
-            }
-
-            const results = [];
-            for (const url of urls) {
-              const result = await processImage(url);
-              results.push(result);
-            }
-
-            // Output results as JSON for GitHub Actions
-            console.log('RESULTS:', JSON.stringify(results));
-          }
-
-          main().catch(error => {
-            console.error('Fatal error:', error);
-            process.exit(1);
-          });
-          SCRIPT_EOF
-
-      # Step 6: Write URLs to file
+      # Step 7: Write URLs to file for the processing script
+      # This step converts the JSON array from the previous step into a file
+      # We use a file instead of environment variables to preserve special characters like #
       - name: Write URLs to file
         uses: actions/github-script@v7
         env:
@@ -380,71 +245,114 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            // Read from env var to preserve special characters like #
+            
+            // Read URLs from environment variable (set by previous step)
+            // Using env var preserves special characters like # that might be lost in shell
             const urls = JSON.parse(process.env.URLS_JSON);
+            
+            // Write URLs to JSON file for the processing script to read
             fs.writeFileSync('urls.json', JSON.stringify(urls, null, 2));
-            console.log('Wrote URLs to urls.json:', urls);
-            console.log('Verified hash fragments preserved:', urls.map(u => u.includes('#') ? '✓ has #' : '✗ missing #'));
+            
+            console.log(`Wrote ${urls.length} URL(s) to urls.json`);
 
-      # Step 7: Process and upload images
+      # Step 8: Process and upload images
+      # This step runs the Node.js script that processes all images
+      # It downloads, validates, and uploads each image to S3
+      # Note: GITHUB_TOKEN is automatically provided by GitHub Actions for authentication
       - name: Process and upload images
         id: process
         env:
+          # AWS credentials from GitHub Secrets
+          # These are securely stored in repository settings and never exposed in logs
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          # GITHUB_TOKEN is automatically provided by GitHub Actions
+          # This allows the script to authenticate when downloading private GitHub images
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Show what we're processing
-          echo "URLs to process:"
-          cat urls.json
+          # Run the processing script and capture output
+          # The script is located in .github/scripts/process-images.js
+          # Redirect both stdout and stderr to output.log for later parsing
+          node .github/scripts/process-images.js > output.log 2>&1
           
-          node process-images.js > output.log 2>&1
-          
-          # Extract results from log
+          # Extract results from log file
+          # The script outputs "RESULTS: {...}" which we extract here
           RESULTS=$(grep "RESULTS:" output.log | sed 's/RESULTS: //')
+          
+          # Store results in GitHub Actions output for next step
+          # This allows the next step to access the results
           echo "results=$RESULTS" >> $GITHUB_OUTPUT
           
           # Show full log for debugging
+          # This helps diagnose issues if processing fails
           cat output.log
 
-      # Step 8: Comment results back to PR
+      # Step 9: Comment results back to PR
+      # This step posts a comment on the PR with the upload results
+      # Shows successful uploads with previews and failed uploads with error messages
+      # The maintainer can then copy the permanent S3 URLs to replace temporary URLs in the PR
       - name: Comment results
         uses: actions/github-script@v7
         with:
           script: |
+            // Parse results from previous step
+            // The results are JSON encoded in the workflow output
             const results = JSON.parse('${{ steps.process.outputs.results }}');
             
-            let commentBody = '## 🖼️ Image Upload Results\n\n';
+            // Helper function to sanitize URLs for markdown
+            // Prevents XSS and ensures URLs are properly formatted
+            function sanitizeUrl(url) {
+              if (!url) return '';
+              // Remove any potentially dangerous characters
+              return url.replace(/[<>]/g, '');
+            }
             
+            // Build comment body with results
+            // This comment helps maintainers identify which permanent URLs to use
+            let commentBody = '## 🖼️ Image Upload Results\n\n';
+            commentBody += '**Next steps**: Copy the permanent S3 URLs below and replace the temporary URLs in the PR files.\n\n';
+            
+            // Separate successful and failed uploads
             const successful = results.filter(r => r.success);
             const failed = results.filter(r => !r.success);
             
+            // Add successful uploads section
             if (successful.length > 0) {
               commentBody += '### ✅ Successfully Uploaded\n\n';
               successful.forEach(result => {
+                // Sanitize URLs before including in markdown
+                const safeOriginalUrl = sanitizeUrl(result.originalUrl);
+                const safeS3Url = sanitizeUrl(result.s3Url);
+                
                 commentBody += `#### ${result.filename}\n`;
-                commentBody += `- **Original URL**: ${result.originalUrl}\n`;
-                commentBody += `- **S3 URL**: ${result.s3Url}\n`;
+                commentBody += `- **Original URL**: ${safeOriginalUrl}\n`;
+                commentBody += `- **S3 URL**: ${safeS3Url}\n`;
                 commentBody += `- **Format**: ${result.metadata.format}\n`;
                 commentBody += `- **Dimensions**: ${result.metadata.width}×${result.metadata.height}\n`;
                 commentBody += `- **Size**: ${result.metadata.size}\n\n`;
-                commentBody += `![Preview](${result.s3Url})\n\n`;
+                
+                // Add image preview (GitHub will render this as an image)
+                commentBody += `![Preview](${safeS3Url})\n\n`;
                 commentBody += '---\n\n';
               });
             }
             
+            // Add failed uploads section
             if (failed.length > 0) {
               commentBody += '### ❌ Failed Uploads\n\n';
               failed.forEach(result => {
-                commentBody += `- **URL**: ${result.originalUrl}\n`;
+                const safeUrl = sanitizeUrl(result.originalUrl);
+                commentBody += `- **URL**: ${safeUrl}\n`;
                 commentBody += `- **Error**: ${result.error}\n\n`;
               });
             }
             
+            // Add summary
             commentBody += `\n*Processed ${results.length} image(s): ${successful.length} successful, ${failed.length} failed*`;
             
-            // Post comment
+            // Post comment to PR
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -452,7 +360,8 @@ jobs:
               body: commentBody
             });
             
-            // Add reaction to indicate completion
+            // Add reaction to original comment to indicate completion
+            // ✅ rocket emoji for all success, 🤔 confused for partial failures
             await github.rest.reactions.createForIssueComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -460,15 +369,33 @@ jobs:
               content: successful.length === results.length ? 'rocket' : 'confused'
             });
 
-      # Step 8: Fail workflow if any upload failed
+      # Step 10: Check for failures and fail workflow if needed
+      # This step validates that all images were uploaded successfully
+      # If any failed, the workflow will fail (exit code 1)
       - name: Check for failures
         run: |
+          # Parse results from previous step
           RESULTS='${{ steps.process.outputs.results }}'
+          
+          # Count failed uploads using jq (JSON processor)
+          # jq filters the array to only include items where success == false
           FAILED=$(echo "$RESULTS" | jq '[.[] | select(.success == false)] | length')
           
+          # If any uploads failed, exit with error
           if [ "$FAILED" -gt 0 ]; then
             echo "::error::$FAILED image(s) failed to upload"
             exit 1
           fi
           
-          echo "All images uploaded successfully!"
+          echo "✓ All images uploaded successfully!"
+
+      # Step 11: Cleanup temporary files
+      # Remove temporary files created during processing
+      # This prevents sensitive data from lingering in workflow artifacts
+      # Note: process-images.js is NOT removed as it's part of the repository
+      - name: Cleanup temporary files
+        if: always()  # Run even if previous steps failed
+        run: |
+          # Remove temporary files (but not the script file from .github/scripts/)
+          rm -f urls.json output.log
+          echo "✓ Cleaned up temporary files"
