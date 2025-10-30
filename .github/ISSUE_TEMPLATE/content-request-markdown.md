@@ -1,5 +1,5 @@
 ---
-name: Content Request
+name: Content Request Markdown
 about: Request new content or updates to existing framework content
 title: ''
 labels: 'content'
