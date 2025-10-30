@@ -245,11 +245,15 @@ jobs:
       # Most dependencies (axios, sharp, uuid) are already in package.json
       # AWS SDK packages were added to package.json for this workflow
       # Note: If cache is hit, this step will be much faster (seconds instead of minutes)
+      # Note: Using --no-frozen-lockfile until pnpm-lock.yaml is committed to repo
       - name: Install dependencies
         run: |
           # Install dependencies using pnpm
           # pnpm will automatically use the cache if available
-          pnpm install --frozen-lockfile
+          # Using --no-frozen-lockfile because pnpm-lock.yaml may not exist yet
+          # TODO: After running 'pnpm install' locally and committing pnpm-lock.yaml,
+          # change this back to 'pnpm install --frozen-lockfile' for better reproducibility
+          pnpm install --no-frozen-lockfile
 
       # Step 8: Write URLs to file for the processing script
       # This step converts the JSON array from the previous step into a file
