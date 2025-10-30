@@ -1,5 +1,5 @@
 ---
-name: Content Request Markdown
+name: Content Request
 about: Request new content or updates to existing framework content
 title: ''
 labels: 'content'
@@ -13,6 +13,10 @@ assignees: ''
 ## Type of request
 - [ ] Add new content
 - [ ] Update existing content
+
+## Contribution intent
+- [ ] I can provide/create this content myself
+- [ ] I'm identifying a need for others to address
 
 ## What content are you suggesting for?
 _Be as specific as possible. Examples:_
