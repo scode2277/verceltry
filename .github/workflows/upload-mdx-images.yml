@@ -210,71 +210,46 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 5: Setup Node.js environment
+      # Step 5: Setup Node.js and pnpm
       # Node.js is required to run the image processing script
-      # Note: We don't use setup-node's built-in cache because we install packages
-      # directly without a package.json. Instead, we use explicit caching in Step 6.
+      # pnpm is the package manager used by this repository
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'  # Using Node.js 20 (LTS version)
+      
+      # Install pnpm (package manager used by this repository)
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0  # Match the version in package.json packageManager field
+          run_install: false  # We'll install dependencies manually with caching
 
-      # Step 6: Cache npm dependencies
-      # This step caches node_modules to speed up subsequent workflow runs
+      # Step 6: Cache pnpm dependencies
+      # This step caches node_modules and pnpm store to speed up subsequent workflow runs
       # Sharp is a large package with native binaries (~50MB), so caching saves significant time
-      # Cache key is based on package versions - if dependencies don't change, cache is reused
-      - name: Cache npm dependencies
+      # Cache key is based on pnpm-lock.yaml - if dependencies don't change, cache is reused
+      - name: Cache pnpm dependencies
         uses: actions/cache@v4
-        id: npm-cache
+        id: pnpm-cache
         with:
           path: |
             node_modules
-            ~/.npm
-          key: ${{ runner.os }}-npm-image-upload-${{ hashFiles('**/package-lock.json') }}
+            ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-npm-image-upload-
-            ${{ runner.os }}-npm-
+            ${{ runner.os }}-pnpm-
 
       # Step 7: Install dependencies
-      # These npm packages are required for image processing:
-      # - @aws-sdk/client-s3: AWS SDK for S3 operations
-      # - @aws-sdk/lib-storage: Helper for multipart uploads
-      # - axios: HTTP client for downloading images from GitHub
-      # - sharp: Image processing library (resize, validate, convert) - large package with native binaries
-      # - uuid: Generate unique identifiers for filenames
+      # Installs all dependencies from package.json using pnpm
+      # Most dependencies (axios, sharp, uuid) are already in package.json
+      # AWS SDK packages were added to package.json for this workflow
       # Note: If cache is hit, this step will be much faster (seconds instead of minutes)
       - name: Install dependencies
         run: |
-          # Only install if cache was not hit
-          # setup-node@v4 handles npm cache automatically, but we also cache node_modules
-          if [ "${{ steps.npm-cache.outputs.cache-hit }}" != "true" ]; then
-            echo "Cache miss - installing dependencies..."
-            # Pin dependencies to specific versions for security and reproducibility
-            # Using exact versions prevents unexpected breaking changes
-            npm install \
-              @aws-sdk/client-s3@^3.490.0 \
-              @aws-sdk/lib-storage@^3.490.0 \
-              axios@^1.6.0 \
-              sharp@^0.33.0 \
-              uuid@^9.0.0
-            
-            # Create package-lock.json for caching (if it doesn't exist)
-            if [ ! -f package-lock.json ]; then
-              npm shrinkwrap
-            fi
-          else
-            echo "Cache hit - using cached dependencies (installation skipped)"
-            # Verify node_modules exists
-            if [ ! -d "node_modules" ]; then
-              echo "Warning: node_modules not found despite cache hit, installing..."
-              npm install \
-                @aws-sdk/client-s3@^3.490.0 \
-                @aws-sdk/lib-storage@^3.490.0 \
-                axios@^1.6.0 \
-                sharp@^0.33.0 \
-                uuid@^9.0.0
-            fi
-          fi
+          # Install dependencies using pnpm
+          # pnpm will automatically use the cache if available
+          pnpm install --frozen-lockfile
 
       # Step 8: Write URLs to file for the processing script
       # This step converts the JSON array from the previous step into a file
@@ -319,19 +294,58 @@ jobs:
           node .github/scripts/process-images.js > output.log 2>&1
           
           # Extract results from log file
-          # The script outputs "RESULTS: {...}" which we extract here
-          # Write to a file instead of output variable to avoid size/escaping issues
+          # The script outputs "RESULTS: {...}" which can be multi-line JSON
+          # We need to extract everything after "RESULTS: " using a method that handles multi-line JSON
           # Handle case where no results line exists (script may have failed)
-          RESULTS=$(grep "RESULTS:" output.log | sed 's/RESULTS: //' || echo '[]')
           
-          # Use empty array as default if no results found
+          echo "Extracting RESULTS from output.log..."
+          
+          # Use Perl to extract multi-line JSON (more reliable than sed for multi-line)
+          # Pattern: Find "RESULTS: " and capture everything from there to end of file (which should be the JSON)
+          RESULTS=$(perl -0777 -pe 's/.*RESULTS:\s*//s' output.log 2>/dev/null || echo '')
+          
+          # Fallback: If perl not available, try awk method
           if [ -z "$RESULTS" ]; then
+            echo "Trying awk method..."
+            RESULTS_LINE=$(grep -n "RESULTS:" output.log | head -1 | cut -d: -f1)
+            if [ -n "$RESULTS_LINE" ]; then
+              RESULTS=$(awk "NR >= $RESULTS_LINE { if (NR == $RESULTS_LINE) { sub(/RESULTS: /, \"\"); } print }" output.log)
+            fi
+          fi
+          
+          # Trim whitespace from start and end
+          RESULTS=$(echo "$RESULTS" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+          
+          # Verify it's valid JSON (at least starts with [)
+          if [ -z "$RESULTS" ] || ! echo "$RESULTS" | grep -q '^\['; then
+            echo "⚠ Warning: No valid RESULTS found or invalid format"
+            echo "Preview of output.log tail:"
+            tail -20 output.log
             RESULTS='[]'
           fi
           
           # Write results to file for next step to read
           # This avoids GitHub Actions output variable size limits and escaping issues
           echo "$RESULTS" > results.json
+          
+          # Verify the file was written correctly
+          if [ -f results.json ]; then
+            FILE_SIZE=$(wc -c < results.json | tr -d ' ')
+            echo "✓ results.json created: $FILE_SIZE bytes"
+            echo "Preview: $(head -c 200 results.json)..."
+            
+            # Quick validation that it's valid JSON
+            if command -v jq &> /dev/null; then
+              if jq empty results.json 2>/dev/null; then
+                echo "✓ results.json contains valid JSON"
+              else
+                echo "⚠ Warning: results.json may not be valid JSON"
+              fi
+            fi
+          else
+            echo "❌ Error: results.json was not created!"
+            exit 1
+          fi
           
           # Show full log for debugging
           # This helps diagnose issues if processing fails
