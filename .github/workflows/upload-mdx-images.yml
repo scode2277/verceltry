@@ -216,26 +216,69 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'  # Using Node.js 20 (LTS version)
+          # Cache npm dependencies to speed up installation
+          # This significantly reduces install time on subsequent runs
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
 
-      # Step 6: Install dependencies
+      # Step 6: Cache npm dependencies
+      # This step caches node_modules to speed up subsequent workflow runs
+      # Sharp is a large package with native binaries (~50MB), so caching saves significant time
+      # Cache key is based on package versions - if dependencies don't change, cache is reused
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        id: npm-cache
+        with:
+          path: |
+            node_modules
+            ~/.npm
+          key: ${{ runner.os }}-npm-image-upload-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-image-upload-
+            ${{ runner.os }}-npm-
+
+      # Step 7: Install dependencies
       # These npm packages are required for image processing:
       # - @aws-sdk/client-s3: AWS SDK for S3 operations
       # - @aws-sdk/lib-storage: Helper for multipart uploads
       # - axios: HTTP client for downloading images from GitHub
-      # - sharp: Image processing library (resize, validate, convert)
+      # - sharp: Image processing library (resize, validate, convert) - large package with native binaries
       # - uuid: Generate unique identifiers for filenames
+      # Note: If cache is hit, this step will be much faster (seconds instead of minutes)
       - name: Install dependencies
         run: |
-          # Pin dependencies to specific versions for security and reproducibility
-          # Using exact versions prevents unexpected breaking changes
-          npm install \
-            @aws-sdk/client-s3@^3.490.0 \
-            @aws-sdk/lib-storage@^3.490.0 \
-            axios@^1.6.0 \
-            sharp@^0.33.0 \
-            uuid@^9.0.0
+          # Only install if cache was not hit
+          # setup-node@v4 handles npm cache automatically, but we also cache node_modules
+          if [ "${{ steps.npm-cache.outputs.cache-hit }}" != "true" ]; then
+            echo "Cache miss - installing dependencies..."
+            # Pin dependencies to specific versions for security and reproducibility
+            # Using exact versions prevents unexpected breaking changes
+            npm install \
+              @aws-sdk/client-s3@^3.490.0 \
+              @aws-sdk/lib-storage@^3.490.0 \
+              axios@^1.6.0 \
+              sharp@^0.33.0 \
+              uuid@^9.0.0
+            
+            # Create package-lock.json for caching (if it doesn't exist)
+            if [ ! -f package-lock.json ]; then
+              npm shrinkwrap
+            fi
+          else
+            echo "Cache hit - using cached dependencies (installation skipped)"
+            # Verify node_modules exists
+            if [ ! -d "node_modules" ]; then
+              echo "Warning: node_modules not found despite cache hit, installing..."
+              npm install \
+                @aws-sdk/client-s3@^3.490.0 \
+                @aws-sdk/lib-storage@^3.490.0 \
+                axios@^1.6.0 \
+                sharp@^0.33.0 \
+                uuid@^9.0.0
+            fi
+          fi
 
-      # Step 7: Write URLs to file for the processing script
+      # Step 8: Write URLs to file for the processing script
       # This step converts the JSON array from the previous step into a file
       # We use a file instead of environment variables to preserve special characters like #
       - name: Write URLs to file
@@ -255,7 +298,7 @@ jobs:
             
             console.log(`Wrote ${urls.length} URL(s) to urls.json`);
 
-      # Step 8: Process and upload images
+      # Step 9: Process and upload images
       # This step runs the Node.js script that processes all images
       # It downloads, validates, and uploads each image to S3
       # Note: GITHUB_TOKEN is automatically provided by GitHub Actions for authentication
@@ -279,22 +322,24 @@ jobs:
           
           # Extract results from log file
           # The script outputs "RESULTS: {...}" which we extract here
+          # Write to a file instead of output variable to avoid size/escaping issues
           # Handle case where no results line exists (script may have failed)
           RESULTS=$(grep "RESULTS:" output.log | sed 's/RESULTS: //' || echo '[]')
           
-          # Store results in GitHub Actions output for next step
-          # This allows the next step to access the results
           # Use empty array as default if no results found
           if [ -z "$RESULTS" ]; then
             RESULTS='[]'
           fi
-          echo "results=$RESULTS" >> $GITHUB_OUTPUT
+          
+          # Write results to file for next step to read
+          # This avoids GitHub Actions output variable size limits and escaping issues
+          echo "$RESULTS" > results.json
           
           # Show full log for debugging
           # This helps diagnose issues if processing fails
           cat output.log
 
-      # Step 9: Comment results back to PR
+      # Step 10: Comment results back to PR
       # This step posts a comment on the PR with the upload results
       # Shows successful uploads with previews and failed uploads with error messages
       # The maintainer can then copy the permanent S3 URLs to replace temporary URLs in the PR
@@ -302,20 +347,31 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            // Parse results from previous step
-            // The results are JSON encoded in the workflow output
-            // Handle case where results might be empty or malformed
+            // Parse results from file (written by previous step)
+            // Using a file instead of output variables avoids size limits and escaping issues
+            const fs = require('fs');
             let results;
             try {
-              const resultsStr = '${{ steps.process.outputs.results }}';
-              if (!resultsStr || resultsStr.trim() === '') {
-                throw new Error('No results found - workflow may have failed before processing');
+              // Read results from file
+              const resultsPath = 'results.json';
+              if (!fs.existsSync(resultsPath)) {
+                throw new Error('Results file not found - workflow may have failed before processing');
               }
+              
+              const resultsStr = fs.readFileSync(resultsPath, 'utf8').trim();
+              if (!resultsStr || resultsStr === '') {
+                throw new Error('Results file is empty - workflow may have failed before processing');
+              }
+              
               results = JSON.parse(resultsStr);
               
               // Validate results is an array
               if (!Array.isArray(results)) {
-                throw new Error('Results is not an array');
+                throw new Error(`Results is not an array: ${typeof results}`);
+              }
+              
+              if (results.length === 0) {
+                throw new Error('No results found in results array');
               }
             } catch (error) {
               // If parsing fails, post an error comment
@@ -396,17 +452,20 @@ jobs:
               content: successful.length === results.length ? 'rocket' : 'confused'
             });
 
-      # Step 10: Check for failures and fail workflow if needed
+      # Step 11: Check for failures and fail workflow if needed
       # This step validates that all images were uploaded successfully
       # If any failed, the workflow will fail (exit code 1)
       - name: Check for failures
         run: |
-          # Parse results from previous step
-          RESULTS='${{ steps.process.outputs.results }}'
+          # Read results from file (written by processing step)
+          if [ ! -f results.json ]; then
+            echo "::error::Results file not found"
+            exit 1
+          fi
           
           # Count failed uploads using jq (JSON processor)
           # jq filters the array to only include items where success == false
-          FAILED=$(echo "$RESULTS" | jq '[.[] | select(.success == false)] | length')
+          FAILED=$(jq '[.[] | select(.success == false)] | length' results.json)
           
           # If any uploads failed, exit with error
           if [ "$FAILED" -gt 0 ]; then
@@ -416,7 +475,7 @@ jobs:
           
           echo "✓ All images uploaded successfully!"
 
-      # Step 11: Cleanup temporary files
+      # Step 12: Cleanup temporary files
       # Remove temporary files created during processing
       # This prevents sensitive data from lingering in workflow artifacts
       # Note: process-images.js is NOT removed as it's part of the repository
@@ -424,5 +483,5 @@ jobs:
         if: always()  # Run even if previous steps failed
         run: |
           # Remove temporary files (but not the script file from .github/scripts/)
-          rm -f urls.json output.log
+          rm -f urls.json output.log results.json
           echo "✓ Cleaned up temporary files"
