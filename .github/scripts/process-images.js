@@ -96,13 +96,10 @@ async function downloadImage(url) {
       headers['Accept-Language'] = 'en-US,en;q=0.9';
       headers['Referer'] = 'https://github.com/';
       
-      // Use GITHUB_TOKEN if available (for private images that require auth)
-      // This allows the workflow to access private GitHub-hosted images
-      // GITHUB_TOKEN is automatically provided by GitHub Actions
-      if (process.env.GITHUB_TOKEN) {
-        headers['Authorization'] = `token ${process.env.GITHUB_TOKEN}`;
-        console.log('Using GITHUB_TOKEN for authentication');
-      }
+      // Note: GitHub image URLs with JWT tokens are self-authenticating
+      // The JWT token in the URL query parameter provides authentication
+      // Adding Authorization header is not needed and may cause 400 errors
+      // Only use GITHUB_TOKEN for GitHub API calls, not for image CDN URLs
     }
     
     const response = await axios({
@@ -134,15 +131,35 @@ async function downloadImage(url) {
       const status = error.response.status;
       
       // Provide helpful error messages for common cases
-      if (status === 404) {
+      if (status === 400) {
+        // GitHub may return 400 for invalid requests (expired JWT, malformed URL, etc.)
+        if (url.includes('private-user-images.githubusercontent.com') || 
+            url.includes('user-images.githubusercontent.com')) {
+          // Check if URL has JWT token and provide specific guidance
+          const hasJWT = url.includes('jwt=');
+          if (hasJWT) {
+            throw new Error('HTTP 400: Image URL expired or invalid. GitHub private image URLs expire within 5-15 minutes. Please copy a fresh URL directly from the PR comment and ensure the workflow runs quickly after posting the /approve-images comment.');
+          } else {
+            throw new Error('HTTP 400: Bad request. The image URL may be invalid or malformed. Ensure the URL is fresh and copied directly from a PR comment or description.');
+          }
+        }
+        throw new Error(`HTTP ${status}: Bad request - invalid URL or request format`);
+      } else if (status === 404) {
         // Check if it's a GitHub URL that might have expired
         if (url.includes('private-user-images.githubusercontent.com') || 
             url.includes('user-images.githubusercontent.com')) {
-          throw new Error('GitHub image URL not found or expired. Please ensure the URL is fresh and copied directly from a PR comment or description. If the URL works in your browser, it may require authentication that the workflow cannot provide.');
+          const hasJWT = url.includes('jwt=');
+          if (hasJWT) {
+            throw new Error('HTTP 404: Image URL expired or not found. GitHub private image URLs expire within 5-15 minutes. Please copy a fresh URL directly from the PR comment and ensure the workflow runs quickly after posting the /approve-images comment.');
+          } else {
+            throw new Error('HTTP 404: GitHub image URL not found or expired. Please ensure the URL is fresh and copied directly from a PR comment or description.');
+          }
         }
         throw new Error(`HTTP ${status}: Image not found`);
       } else if (status === 403) {
         throw new Error(`HTTP ${status}: Access forbidden. The image URL may require authentication or the token may have expired.`);
+      } else if (status === 401) {
+        throw new Error(`HTTP ${401}: Unauthorized. The image may require authentication.`);
       } else if (status === 410) {
         throw new Error(`HTTP ${status}: Image has been removed or expired. Please use a fresh URL from a PR comment.`);
       }

@@ -279,10 +279,15 @@ jobs:
           
           # Extract results from log file
           # The script outputs "RESULTS: {...}" which we extract here
-          RESULTS=$(grep "RESULTS:" output.log | sed 's/RESULTS: //')
+          # Handle case where no results line exists (script may have failed)
+          RESULTS=$(grep "RESULTS:" output.log | sed 's/RESULTS: //' || echo '[]')
           
           # Store results in GitHub Actions output for next step
           # This allows the next step to access the results
+          # Use empty array as default if no results found
+          if [ -z "$RESULTS" ]; then
+            RESULTS='[]'
+          fi
           echo "results=$RESULTS" >> $GITHUB_OUTPUT
           
           # Show full log for debugging
@@ -299,7 +304,29 @@ jobs:
           script: |
             // Parse results from previous step
             // The results are JSON encoded in the workflow output
-            const results = JSON.parse('${{ steps.process.outputs.results }}');
+            // Handle case where results might be empty or malformed
+            let results;
+            try {
+              const resultsStr = '${{ steps.process.outputs.results }}';
+              if (!resultsStr || resultsStr.trim() === '') {
+                throw new Error('No results found - workflow may have failed before processing');
+              }
+              results = JSON.parse(resultsStr);
+              
+              // Validate results is an array
+              if (!Array.isArray(results)) {
+                throw new Error('Results is not an array');
+              }
+            } catch (error) {
+              // If parsing fails, post an error comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                body: `❌ **Error**: Failed to parse workflow results: ${error.message}\n\nPlease check the workflow logs for details.`
+              });
+              throw error;
+            }
             
             // Helper function to sanitize URLs for markdown
             // Prevents XSS and ensures URLs are properly formatted
