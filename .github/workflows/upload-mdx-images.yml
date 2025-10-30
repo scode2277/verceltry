@@ -212,14 +212,12 @@ jobs:
 
       # Step 5: Setup Node.js environment
       # Node.js is required to run the image processing script
+      # Note: We don't use setup-node's built-in cache because we install packages
+      # directly without a package.json. Instead, we use explicit caching in Step 6.
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'  # Using Node.js 20 (LTS version)
-          # Cache npm dependencies to speed up installation
-          # This significantly reduces install time on subsequent runs
-          cache: 'npm'
-          cache-dependency-path: 'package-lock.json'
 
       # Step 6: Cache npm dependencies
       # This step caches node_modules to speed up subsequent workflow runs
