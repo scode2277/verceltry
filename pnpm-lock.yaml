@@ -40,7 +40,7 @@ importers:
         specifier: 4.0.7
         version: 4.0.7
       vocs:
-        specifier: ^1.1.0
+        specifier: ^1.0.13
         version: 1.1.0(@types/node@24.10.0)(@types/react@19.2.2)(jiti@2.6.1)(lightningcss@1.30.2)(react-dom@19.2.0(react@19.2.0))(react-router-dom@7.9.5(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)(rollup@4.52.5)(typescript@5.9.3)
 
 packages:
@@ -3645,7 +3645,7 @@ packages:
       yaml:
         optional: true
 
-  vocs@1.1.0:
+  vocs@1.0.13:
     resolution: {integrity: sha512-RvSdP+OP5w/mzY6rupup8RLRRfi+9dqZmiiB/NOFrQds5iZNR2h2hNui+oKXUwAxv/Dywo2ma4YYSy6v/aw0Dw==}
     engines: {node: '>=22'}
     hasBin: true
@@ -7930,7 +7930,7 @@ snapshots:
       lightningcss: 1.30.2
       yaml: 2.8.1
 
-  vocs@1.1.0(@types/node@24.10.0)(@types/react@19.2.2)(jiti@2.6.1)(lightningcss@1.30.2)(react-dom@19.2.0(react@19.2.0))(react-router-dom@7.9.5(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)(rollup@4.52.5)(typescript@5.9.3):
+  vocs@1.0.13(@types/node@24.10.0)(@types/react@19.2.2)(jiti@2.6.1)(lightningcss@1.30.2)(react-dom@19.2.0(react@19.2.0))(react-router-dom@7.9.5(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)(rollup@4.52.5)(typescript@5.9.3):
     dependencies:
       '@floating-ui/react': 0.27.16(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@hono/node-server': 1.19.6(hono@4.10.4)
