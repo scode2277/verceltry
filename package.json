@@ -6,7 +6,7 @@
   "devDependencies": {
     "cspell": "^9.2.1",
     "tailwindcss": "4.0.7",
-    "vocs": "^1.0.13"
+    "vocs": "^1.1.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
