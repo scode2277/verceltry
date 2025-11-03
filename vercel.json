@@ -1,15 +1,4 @@
 {
   "buildCommand": "bash vercel_build.sh",
-  "outputDirectory": "docs/dist",
-  "rewrites": [
-    { "source": "", "destination": "/intro/introduction" },
-    { "source": "/", "destination": "/intro/introduction" },
-    { "source": "/intro", "destination": "/intro/introduction/index.html" },
-    { "source": "/intro/", "destination": "/intro/introduction/index.html" },
-    { "source": "/contribute", "destination": "/contribute/contributing" },
-    { "source": "/contribute/", "destination": "/contribute/contributing" },
-    { "source": "/:section", "destination": "/:section/overview" },
-    { "source": "/:section/overview", "destination": "/:section/README" },
-    { "source": "/:section/", "destination": "/:section/overview" }
-  ]
+  "outputDirectory": "docs/dist"
 }
