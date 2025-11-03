@@ -12,20 +12,30 @@ jobs:
     name: Publish to Cloudflare Pages
     steps:
       - name: Checkout
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+        uses: actions/checkout@v3
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+          run_install: false
+
+      # 3️⃣ Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
 
+      # 4️⃣ Install dependencies
       - name: Install dependencies
         run: pnpm install
 
+      # 5️⃣ Build site
       - name: Build site
+        run: pnpm run docs:build
         env:
           NODE_OPTIONS: --max-old-space-size=8192
-        run: pnpm run docs:build
 
       - name: Publish to Cloudflare Pages
         uses: AdrianGonz97/refined-cf-pages-action@v1
@@ -33,9 +43,15 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           githubToken: ${{ secrets.GITHUB_TOKEN }}
-          projectName: verceltry
-          directory: docs/dist
+          projectName: YOUR_PROJECT_NAME
+          directory: YOUR_BUILD_OUTPUT_DIRECTORY
+          # Optional: Supply a deployment name if you want to have GitHub Deployments triggered
           deploymentName: Production
+          # Optional: Switch what branch you are publishing to.
+          # By default, this will be the branch which triggered this workflow
           branch: main
-          workingDirectory: ./
-          wranglerVersion: ''
+          # Optional: Change the working directory
+          workingDirectory: my-site
+          # Optional: Change the Wrangler version, allows you to point to a specific version or a tag such as `beta`
+          # Specifying an empty string ('') will omit the version specifier.
+          wranglerVersion: '3'
