@@ -43,7 +43,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           githubToken: ${{ secrets.GITHUB_TOKEN }}
-          projectName: verceltry
+          projectName: ./
           directory: docs/dist
           # Optional: Supply a deployment name if you want to have GitHub Deployments triggered
           deploymentName: Production
@@ -51,7 +51,7 @@ jobs:
           # By default, this will be the branch which triggered this workflow
           branch: main
           # Optional: Change the working directory
-          workingDirectory: .
+          workingDirectory: ./
           # Optional: Change the Wrangler version, allows you to point to a specific version or a tag such as `beta`
           # Specifying an empty string ('') will omit the version specifier.
           wranglerVersion: ''
