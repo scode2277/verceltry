@@ -237,7 +237,7 @@ jobs:
           echo "Script exited with code: $EXIT_CODE"
           echo "Extracting RESULTS from output.log..."
           
-          RESULTS=$(perl -0777 -pe 's/.*RESULTS:\s*//s' output.log 2>/dev/null || echo ''
+          RESULTS=$(perl -0777 -pe 's/.*RESULTS:\s*//s' output.log 2>/dev/null || echo '')
           
           RESULTS=$(echo "$RESULTS" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
           
