@@ -322,13 +322,10 @@ jobs:
             // Add successful uploads section
             if (successful.length > 0) {
               commentBody += '### ✅ Successfully Uploaded\n\n';
-              successful.forEach(result => {
-                const safeOriginalUrl = sanitizeUrl(result.originalUrl);
+              successful.forEach((result, index) => {
                 const safeS3Url = sanitizeUrl(result.s3Url);
                 
-                commentBody += `#### ${result.filename}\n`;
-                commentBody += `- **Original URL**: ${safeOriginalUrl}\n`;
-                commentBody += `- **S3 URL**: ${safeS3Url}\n`;
+                commentBody += `${index + 1}. **S3 URL**: ${safeS3Url}\n`;
                 commentBody += '---\n\n';
               });
             }
@@ -336,10 +333,10 @@ jobs:
             // Add failed uploads section
             if (failed.length > 0) {
               commentBody += '### ❌ Failed Uploads\n\n';
-              failed.forEach(result => {
+              failed.forEach((result, index) => {
                 const safeUrl = sanitizeUrl(result.originalUrl);
-                commentBody += `- **URL**: ${safeUrl}\n`;
-                commentBody += `- **Error**: ${result.error}\n\n`;
+                commentBody += `${index + 1}. **URL**: ${safeUrl}\n`;
+                commentBody += `   **Error**: ${result.error}\n\n`;
               });
             }
             
