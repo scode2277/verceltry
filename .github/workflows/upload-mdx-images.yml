@@ -228,8 +228,13 @@ jobs:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Run script (continue even if it fails so we can extract RESULTS)
+          set +e
           node .github/scripts/process-images.js > output.log 2>&1
+          EXIT_CODE=$?
+          set -e
           
+          echo "Script exited with code: $EXIT_CODE"
           echo "Extracting RESULTS from output.log..."
           
           RESULTS=$(perl -0777 -pe 's/.*RESULTS:\s*//s' output.log 2>/dev/null || echo ''

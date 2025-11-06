@@ -241,6 +241,12 @@ async function main() {
     console.log(`Processing ${urls.length} image(s)...`);
   } catch (error) {
     console.error('Failed to read/parse urls.json:', error.message);
+    // Output error result so workflow can parse and report it
+    console.log('\nRESULTS:', JSON.stringify([{
+      success: false,
+      originalUrl: 'unknown',
+      error: `Failed to read/parse urls.json: ${error.message}`
+    }], null, 2));
     process.exit(1);
   }
 
@@ -260,11 +266,25 @@ async function main() {
     }
   }
 
+  // Always output RESULTS, even if empty (for workflow parsing)
   console.log('\nRESULTS:', JSON.stringify(results, null, 2));
+  
+  // Exit with code 1 only if all images failed
+  const allFailed = results.length > 0 && results.every(r => !r.success);
+  if (allFailed) {
+    console.error('\n✗ All images failed to process');
+    process.exit(1);
+  }
 }
 
 // Run main function and handle any unhandled errors
 main().catch(error => {
   console.error('Fatal error:', error);
+  // Output empty results so workflow can still parse and report the error
+  console.log('\nRESULTS:', JSON.stringify([{
+    success: false,
+    originalUrl: 'unknown',
+    error: `Fatal error: ${error.message}`
+  }], null, 2));
   process.exit(1);
 });
