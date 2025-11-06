@@ -6,15 +6,14 @@ name: Process and Upload Images
 # This workflow is designed for the following contribution flow:
 #
 # 1. Contributors fork the repository and make changes
-# 2. They add images directly to the PR description or PR comments
+# 2. They open a PR against the Frameworks' 'develop' branch
+# 3. They add images directly to the PR description or PR comments
 #    (GitHub automatically hosts these images and provides URLs)
-# 3. They use GitHub image URLs in their contribution (MDX files)
-# 4. They open a PR against the 'develop' branch with their changes
-# 5. A maintainer reviews the PR and the images (visible inline)
-# 6. Maintainer comments '/approve-images' followed by the GitHub image URLs
+# 4. A maintainer reviews the PR and the images (visible inline)
+# 5. Maintainer comments '/approve-images' followed by the GitHub image URLs
 #    (This explicit approval ensures only verified URLs are processed)
-# 7. This workflow processes those URLs and uploads images to AWS S3
-# 8. The workflow posts results back to the PR with permanent S3 URLs
+# 6. This workflow processes those URLs and uploads images to AWS S3
+# 7. The workflow posts results back to the PR with permanent S3 URLs
 #
 # Benefits of this approach:
 # - Contributors can easily paste images directly in PRs (no external uploads)
@@ -30,32 +29,22 @@ on:
   issue_comment:
     types: [created]
 
-# Security: Prevents workflow from running on forks - critical for security!
-# This ensures the workflow only runs in the main repository, not in forks
-# which could be used to expose secrets or run malicious code
 permissions:
-  pull-requests: write  # Required to post comments on PRs
-  issues: write         # Required to post comments on issues/PRs
-  contents: read        # Required to read repository contents
+  pull-requests: write
+  issues: write
+  contents: read
 
 jobs:
   upload-images:
-    # Concurrency control: Prevents multiple workflow runs from executing simultaneously
-    # This avoids race conditions, duplicate uploads, and resource conflicts
-    # If a new comment arrives while one is processing, it will cancel the older one
+    # Concurrency control: Organize workflow runs by PR number
     concurrency:
       group: upload-images-${{ github.event.issue.number }}
-      cancel-in-progress: false  # Keep false to let current run finish, new ones queue
-    
-    # Overall workflow timeout: Prevents workflows from running indefinitely
-    # If processing takes longer than 30 minutes, the workflow will be cancelled
-    timeout-minutes: 30
+      cancel-in-progress: false
     
     # Conditional execution: Only run if ALL conditions are met:
     # 1. Comment is on a pull request (not a regular issue)
     # 2. Comment starts with '/approve-images' command
     # 3. Commenter has appropriate permissions (OWNER, MEMBER, or COLLABORATOR)
-    # Note: We check PR base branch in a step below to ensure it targets 'develop'
     if: |
       github.event.issue.pull_request &&
       startsWith(github.event.comment.body, '/approve-images') &&
@@ -67,7 +56,6 @@ jobs:
     
     steps:
       # Step 1: Acknowledge the command by adding a reaction
-      # This provides immediate visual feedback that the workflow has started
       - name: React to command
         uses: actions/github-script@v7
         with:
@@ -81,108 +69,79 @@ jobs:
             });
 
       # Step 2: Extract GitHub image URLs from the comment
-      # This step parses the comment body to find GitHub-hosted image URLs
-      # We only accept GitHub URLs (user-images.githubusercontent.com or private-user-images.githubusercontent.com)
       - name: Extract GitHub image URLs
         id: extract-urls
         uses: actions/github-script@v7
         with:
           script: |
             const comment = context.payload.comment.body;
-            
+
             // Extract URLs from comment using regex
-            // Pattern matches: http:// or https:// followed by non-whitespace characters
-            // IMPORTANT: [^\s]+ captures everything including query parameters (JWT tokens)
-            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            const urlRegex = /(https:\/\/[^\s]+)/g;
             const urls = comment.match(urlRegex) || [];
-            
-            // Filter to ONLY GitHub-hosted image URLs
-            // We accept:
-            // - user-images.githubusercontent.com
-            // - private-user-images.githubusercontent.com (with JWT tokens)
-            // - github.com/.../assets/... (repository assets)
-            const githubImageUrls = urls.filter(url => {
-              // Filter out the command itself
-              if (url === '/approve-images') return false;
-              
-              // Check if it's a GitHub image URL
-              return url.includes('user-images.githubusercontent.com') || 
-                     url.includes('private-user-images.githubusercontent.com') ||
-                     (url.includes('github.com') && url.includes('/assets/'));
-            });
-            
-            if (githubImageUrls.length === 0) {
-              throw new Error(
-                'No GitHub-hosted image URLs found in comment.\n\n' +
-                'Please provide GitHub image URLs after /approve-images.\n' +
-                'To get GitHub URLs: Add images to PR comments/descriptions, then copy the URLs.\n' +
-                'Supported formats:\n' +
-                '- https://user-images.githubusercontent.com/...\n' +
-                '- https://private-user-images.githubusercontent.com/...\n' +
-                '- https://github.com/.../assets/...'
-              );
-            }
-            
-            // Basic validation: ensure URLs are HTTPS and well-formed
+
             const validatedUrls = [];
             const validationErrors = [];
-            
-            for (const url of githubImageUrls) {
+
+            for (const url of urls) {
+              if (url === '/approve-images') continue;
+
               try {
                 const urlObj = new URL(url);
-                
+
                 // Only allow HTTPS (GitHub always uses HTTPS)
                 if (urlObj.protocol !== 'https:') {
                   validationErrors.push(`${url}: Only HTTPS URLs are allowed`);
                   continue;
                 }
-                
-                // Ensure it's a valid GitHub hostname
+
+                //we could add a check that after this hostname, there is a / and 9 num hash and then again / and after 46 char there is .png
+
+                // Ensure it's a valid GitHub-hosted image
                 const hostname = urlObj.hostname.toLowerCase();
-                const isValidGitHubHost = 
+                const isValidGitHubHost =
                   hostname.includes('user-images.githubusercontent.com') ||
                   hostname.includes('private-user-images.githubusercontent.com') ||
                   (hostname.includes('github.com') && url.includes('/assets/'));
-                
+
                 if (!isValidGitHubHost) {
                   validationErrors.push(`${url}: Not a valid GitHub image URL`);
                   continue;
                 }
-                
+
                 validatedUrls.push(url);
               } catch (error) {
                 validationErrors.push(`${url}: Invalid URL format - ${error.message}`);
               }
             }
-            
+
+            if (validatedUrls.length === 0 && validationErrors.length === 0) {
+              throw new Error('No GitHub-hosted image URLs found in comment.');
+            }
+
             if (validationErrors.length > 0) {
               throw new Error(
                 `URL validation failed:\n${validationErrors.join('\n')}\n\n` +
                 `Please ensure all URLs are GitHub-hosted image URLs.`
               );
             }
-            
-            if (validatedUrls.length === 0) {
-              throw new Error('No valid GitHub image URLs found after validation');
-            }
-            
+
             console.log(`Extracted ${validatedUrls.length} GitHub image URL(s)`);
-            console.log('URLs:', validatedUrls.map(u => {
-              // Show first 60 chars to avoid logging JWT tokens fully
-              const truncated = u.length > 60 ? u.substring(0, 60) + '...' : u;
-              return truncated;
-            }));
-            
+            console.log(
+              'URLs:',
+              validatedUrls.map(u => {
+                const truncated = u.length > 60 ? u.substring(0, 60) + '...' : u;
+                return truncated;
+              })
+            );
+
             // Return validated URLs as JSON array
             return validatedUrls;
           result-encoding: json
 
       # Step 3: Validate that all required AWS secrets are configured
-      # This prevents cryptic failures later when trying to connect to S3
       - name: Validate AWS secrets
         run: |
-          # Check if all required secrets are set
-          # If any secret is missing, the workflow will fail with a clear error message
           if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then
             echo "::error::AWS_ACCESS_KEY_ID secret is not configured"
             exit 1
@@ -206,29 +165,23 @@ jobs:
           echo "✓ All AWS secrets are configured"
 
       # Step 4: Checkout repository
-      # This step is needed to access the process-images.js script from .github/scripts/
       - name: Checkout repository
         uses: actions/checkout@v4
 
       # Step 5: Setup Node.js and pnpm
-      # Node.js is required to run the image processing script
-      # pnpm is the package manager used by this repository
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'  # Using Node.js 20 (LTS version)
+          node-version: '20'
       
-      # Install pnpm (package manager used by this repository)
+      # Step 6: Install pnpm
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.15.0  # Match the version in package.json packageManager field
-          run_install: false  # We'll install dependencies manually with caching
+          version: 10.15.0 
+          run_install: false
 
-      # Step 6: Cache pnpm dependencies
-      # This step caches node_modules and pnpm store to speed up subsequent workflow runs
-      # Sharp is a large package with native binaries (~50MB), so caching saves significant time
-      # Cache key is based on pnpm-lock.yaml - if dependencies don't change, cache is reused
+      # Step 7: Cache pnpm dependencies
       - name: Cache pnpm dependencies
         uses: actions/cache@v4
         id: pnpm-cache
@@ -240,12 +193,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-
 
-      # Step 7: Install dependencies
-      # Installs all dependencies from package.json using pnpm
-      # Most dependencies (axios, sharp, uuid) are already in package.json
-      # AWS SDK packages were added to package.json for this workflow
-      # Note: If cache is hit, this step will be much faster (seconds instead of minutes)
-      # Note: Using --no-frozen-lockfile until pnpm-lock.yaml is committed to repo
+      # Step 8: Install dependencies
       - name: Install dependencies
         run: |
           # Install dependencies using pnpm
@@ -255,9 +203,7 @@ jobs:
           # change this back to 'pnpm install --frozen-lockfile' for better reproducibility
           pnpm install --no-frozen-lockfile
 
-      # Step 8: Write URLs to file for the processing script
-      # This step converts the JSON array from the previous step into a file
-      # We use a file instead of environment variables to preserve special characters like #
+      # Step 9: Write URLs to file for the processing script
       - name: Write URLs to file
         uses: actions/github-script@v7
         env:
@@ -265,62 +211,31 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            
-            // Read URLs from environment variable (set by previous step)
-            // Using env var preserves special characters like # that might be lost in shell
+
             const urls = JSON.parse(process.env.URLS_JSON);
-            
-            // Write URLs to JSON file for the processing script to read
+
             fs.writeFileSync('urls.json', JSON.stringify(urls, null, 2));
             
             console.log(`Wrote ${urls.length} URL(s) to urls.json`);
 
-      # Step 9: Process and upload images
-      # This step runs the Node.js script that processes all images
-      # It downloads, validates, and uploads each image to S3
-      # Note: GITHUB_TOKEN is automatically provided by GitHub Actions for authentication
+      # Step 10: Process and upload images
       - name: Process and upload images
         id: process
         env:
-          # AWS credentials from GitHub Secrets
-          # These are securely stored in repository settings and never exposed in logs
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-          # GITHUB_TOKEN is automatically provided by GitHub Actions
-          # This allows the script to authenticate when downloading private GitHub images
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Run the processing script and capture output
-          # The script is located in .github/scripts/process-images.js
-          # Redirect both stdout and stderr to output.log for later parsing
           node .github/scripts/process-images.js > output.log 2>&1
-          
-          # Extract results from log file
-          # The script outputs "RESULTS: {...}" which can be multi-line JSON
-          # We need to extract everything after "RESULTS: " using a method that handles multi-line JSON
-          # Handle case where no results line exists (script may have failed)
           
           echo "Extracting RESULTS from output.log..."
           
-          # Use Perl to extract multi-line JSON (more reliable than sed for multi-line)
-          # Pattern: Find "RESULTS: " and capture everything from there to end of file (which should be the JSON)
-          RESULTS=$(perl -0777 -pe 's/.*RESULTS:\s*//s' output.log 2>/dev/null || echo '')
+          RESULTS=$(perl -0777 -pe 's/.*RESULTS:\s*//s' output.log 2>/dev/null || echo ''
           
-          # Fallback: If perl not available, try awk method
-          if [ -z "$RESULTS" ]; then
-            echo "Trying awk method..."
-            RESULTS_LINE=$(grep -n "RESULTS:" output.log | head -1 | cut -d: -f1)
-            if [ -n "$RESULTS_LINE" ]; then
-              RESULTS=$(awk "NR >= $RESULTS_LINE { if (NR == $RESULTS_LINE) { sub(/RESULTS: /, \"\"); } print }" output.log)
-            fi
-          fi
-          
-          # Trim whitespace from start and end
           RESULTS=$(echo "$RESULTS" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
           
-          # Verify it's valid JSON (at least starts with [)
           if [ -z "$RESULTS" ] || ! echo "$RESULTS" | grep -q '^\['; then
             echo "⚠ Warning: No valid RESULTS found or invalid format"
             echo "Preview of output.log tail:"
@@ -328,17 +243,13 @@ jobs:
             RESULTS='[]'
           fi
           
-          # Write results to file for next step to read
-          # This avoids GitHub Actions output variable size limits and escaping issues
           echo "$RESULTS" > results.json
           
-          # Verify the file was written correctly
           if [ -f results.json ]; then
             FILE_SIZE=$(wc -c < results.json | tr -d ' ')
             echo "✓ results.json created: $FILE_SIZE bytes"
             echo "Preview: $(head -c 200 results.json)..."
             
-            # Quick validation that it's valid JSON
             if command -v jq &> /dev/null; then
               if jq empty results.json 2>/dev/null; then
                 echo "✓ results.json contains valid JSON"
@@ -350,25 +261,17 @@ jobs:
             echo "❌ Error: results.json was not created!"
             exit 1
           fi
-          
-          # Show full log for debugging
-          # This helps diagnose issues if processing fails
+ 
           cat output.log
 
-      # Step 10: Comment results back to PR
-      # This step posts a comment on the PR with the upload results
-      # Shows successful uploads with previews and failed uploads with error messages
-      # The maintainer can then copy the permanent S3 URLs to replace temporary URLs in the PR
-      - name: Comment results
+      # Step 11: Comment results back to PR and check for failures
+      - name: Comment results and check failures
         uses: actions/github-script@v7
         with:
           script: |
-            // Parse results from file (written by previous step)
-            // Using a file instead of output variables avoids size limits and escaping issues
             const fs = require('fs');
             let results;
             try {
-              // Read results from file
               const resultsPath = 'results.json';
               if (!fs.existsSync(resultsPath)) {
                 throw new Error('Results file not found - workflow may have failed before processing');
@@ -381,7 +284,6 @@ jobs:
               
               results = JSON.parse(resultsStr);
               
-              // Validate results is an array
               if (!Array.isArray(results)) {
                 throw new Error(`Results is not an array: ${typeof results}`);
               }
@@ -390,7 +292,6 @@ jobs:
                 throw new Error('No results found in results array');
               }
             } catch (error) {
-              // If parsing fails, post an error comment
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -400,16 +301,12 @@ jobs:
               throw error;
             }
             
-            // Helper function to sanitize URLs for markdown
-            // Prevents XSS and ensures URLs are properly formatted
             function sanitizeUrl(url) {
               if (!url) return '';
-              // Remove any potentially dangerous characters
               return url.replace(/[<>]/g, '');
             }
-            
+
             // Build comment body with results
-            // This comment helps maintainers identify which permanent URLs to use
             let commentBody = '## 🖼️ Image Upload Results\n\n';
             commentBody += '**Next steps**: Copy the permanent S3 URLs below and replace the temporary URLs in the PR files.\n\n';
             
@@ -421,19 +318,12 @@ jobs:
             if (successful.length > 0) {
               commentBody += '### ✅ Successfully Uploaded\n\n';
               successful.forEach(result => {
-                // Sanitize URLs before including in markdown
                 const safeOriginalUrl = sanitizeUrl(result.originalUrl);
                 const safeS3Url = sanitizeUrl(result.s3Url);
                 
                 commentBody += `#### ${result.filename}\n`;
                 commentBody += `- **Original URL**: ${safeOriginalUrl}\n`;
                 commentBody += `- **S3 URL**: ${safeS3Url}\n`;
-                commentBody += `- **Format**: ${result.metadata.format}\n`;
-                commentBody += `- **Dimensions**: ${result.metadata.width}×${result.metadata.height}\n`;
-                commentBody += `- **Size**: ${result.metadata.size}\n\n`;
-                
-                // Add image preview (GitHub will render this as an image)
-                commentBody += `![Preview](${safeS3Url})\n\n`;
                 commentBody += '---\n\n';
               });
             }
@@ -460,17 +350,14 @@ jobs:
             });
             
             // Add reaction to original comment to indicate completion
-            // ✅ rocket emoji for all success, 🤔 confused for partial failures
             await github.rest.reactions.createForIssueComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               comment_id: context.payload.comment.id,
-              content: successful.length === results.length ? 'rocket' : 'confused'
+              content: successful.length === results.length ? 'hooray' : ''
             });
 
-      # Step 11: Check for failures and fail workflow if needed
-      # This step validates that all images were uploaded successfully
-      # If any failed, the workflow will fail (exit code 1)
+      # Step 12: Check for failures and fail workflow if needed
       - name: Check for failures
         run: |
           # Read results from file (written by processing step)
@@ -480,7 +367,6 @@ jobs:
           fi
           
           # Count failed uploads using jq (JSON processor)
-          # jq filters the array to only include items where success == false
           FAILED=$(jq '[.[] | select(.success == false)] | length' results.json)
           
           # If any uploads failed, exit with error
@@ -491,12 +377,9 @@ jobs:
           
           echo "✓ All images uploaded successfully!"
 
-      # Step 12: Cleanup temporary files
-      # Remove temporary files created during processing
-      # This prevents sensitive data from lingering in workflow artifacts
-      # Note: process-images.js is NOT removed as it's part of the repository
+      # Step 13: Cleanup temporary files
       - name: Cleanup temporary files
-        if: always()  # Run even if previous steps failed
+        if: always()
         run: |
           # Remove temporary files (but not the script file from .github/scripts/)
           rm -f urls.json output.log results.json
