@@ -1,18 +1,17 @@
+# build-preview.yml
+name: Build Preview Deployment
+
 on:
-  push:
-    branches:
-      - main
+  pull_request_target:
+    types: [opened, synchronize, reopened, closed]
 
 jobs:
-  publish:
+  build-preview:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      deployments: write
-    name: Publish to Cloudflare Pages
+    name: Build Preview Site and Upload Build Artifact
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -37,11 +36,9 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=8192
 
-      - name: Publish to Cloudflare Pages
-        uses: AdrianGonz97/refined-cf-pages-action@v1
+      # Uploads the build directory as a workflow artifact
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
         with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-          projectName: verceltry
-          directory: docs/dist
+          name: preview-build
+          path: docs/dist

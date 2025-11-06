@@ -4,7 +4,7 @@
     height: 80% !important;
 }
 
-.vocs_DocsLayout_gutterLeft {
+.vocs_DocsLayout_gutterLeft { 
     justify-content: flex-start;
     width: unset;
 }
