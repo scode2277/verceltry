@@ -75,7 +75,7 @@ async function downloadImage(url) {
           
           const hasJWT = url.includes('jwt=');
           if (hasJWT) {
-            throw new Error('HTTP 400: Image URL expired or invalid. GitHub private image URLs expire within 5-15 minutes. Please copy a fresh URL directly from the PR comment and ensure the workflow runs quickly after posting the /approve-images comment.');
+            throw new Error('HTTP 400: Image URL expired or invalid. GitHub private image URLs expire within 5-15 minutes. Please copy a fresh URL directly from the PR comment and ensure the workflow runs quickly after posting the /img-bot comment.');
           } else {
             throw new Error('HTTP 400: Bad request. The image URL may be invalid or malformed. Ensure the URL is fresh and copied directly from a PR comment or description.');
           }

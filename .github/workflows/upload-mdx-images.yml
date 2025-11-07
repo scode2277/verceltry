@@ -1,30 +1,7 @@
 name: Process and Upload Images
 
-# ============================================================================
-# WORKFLOW PURPOSE
-# ============================================================================
-# This workflow is designed for the following contribution flow:
-#
-# 1. Contributors fork the repository and make changes
-# 2. They open a PR against the Frameworks' 'develop' branch
-# 3. They add images directly to the PR description or PR comments
-#    (GitHub automatically hosts these images and provides URLs)
-# 4. A maintainer reviews the PR and the images (visible inline)
-# 5. Maintainer comments '/approve-images' followed by the GitHub image URLs
-#    (This explicit approval ensures only verified URLs are processed)
-# 6. This workflow processes those URLs and uploads images to AWS S3
-# 7. The workflow posts results back to the PR with permanent S3 URLs
-#
-# Benefits of this approach:
-# - Contributors can easily paste images directly in PRs (no external uploads)
-# - Images are visible inline during PR review
-# - Maintainer explicitly approves each URL for security
-# - GitHub URLs are permanent and reliable
-# - No dependency on external hosting services
-# ============================================================================
-
-# This workflow triggers when a comment is created on an issue or pull request
-# It processes image URLs from comments and uploads them to AWS S3
+# This workflow processes image URLs from PRs comments and uploads them to the S3 bucket
+# It triggers when a comment is created on an issue or pull request
 on:
   issue_comment:
     types: [created]
@@ -36,18 +13,17 @@ permissions:
 
 jobs:
   upload-images:
-    # Concurrency control: Organize workflow runs by PR number
     concurrency:
       group: upload-images-${{ github.event.issue.number }}
       cancel-in-progress: false
     
     # Conditional execution: Only run if ALL conditions are met:
     # 1. Comment is on a pull request (not a regular issue)
-    # 2. Comment starts with '/approve-images' command
+    # 2. Comment starts with '/img-bot' command
     # 3. Commenter has appropriate permissions (OWNER, MEMBER, or COLLABORATOR)
     if: |
       github.event.issue.pull_request &&
-      startsWith(github.event.comment.body, '/approve-images') &&
+      startsWith(github.event.comment.body, '/img-bot') &&
       (github.event.comment.author_association == 'OWNER' || 
        github.event.comment.author_association == 'MEMBER' ||
        github.event.comment.author_association == 'COLLABORATOR')
@@ -84,18 +60,15 @@ jobs:
             const validationErrors = [];
 
             for (const url of urls) {
-              if (url === '/approve-images') continue;
+              if (url === '/img-bot') continue;
 
               try {
                 const urlObj = new URL(url);
 
-                // Only allow HTTPS (GitHub always uses HTTPS)
                 if (urlObj.protocol !== 'https:') {
                   validationErrors.push(`${url}: Only HTTPS URLs are allowed`);
                   continue;
                 }
-
-                //we could add a check that after this hostname, there is a / and 9 num hash and then again / and after 46 char there is .png
 
                 // Ensure it's a valid GitHub-hosted image
                 const hostname = urlObj.hostname.toLowerCase();
@@ -197,11 +170,7 @@ jobs:
       - name: Install dependencies
         run: |
           # Install dependencies using pnpm
-          # pnpm will automatically use the cache if available
-          # Using --no-frozen-lockfile because pnpm-lock.yaml may not exist yet
-          # TODO: After running 'pnpm install' locally and committing pnpm-lock.yaml,
-          # change this back to 'pnpm install --frozen-lockfile' for better reproducibility
-          pnpm install --no-frozen-lockfile
+          pnpm install --frozen-lockfile
 
       # Step 9: Write URLs to file for the processing script
       - name: Write URLs to file
