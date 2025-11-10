@@ -3,7 +3,8 @@
   "outputDirectory": "docs/dist",
   "git": {
     "deploymentEnabled": {
-      "main": false
+      "main": false,
+      "develop": false
     }
   }
 }
