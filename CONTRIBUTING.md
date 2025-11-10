@@ -8,7 +8,7 @@ Both files contain the same content: the docs file is there to render the conten
 while this copy is needed to make it highlighted in the repository dashboard.
 -->
 
-# **Contributing guidelines**
+# **Contributing guidelines** 
 
 The Security Frameworks is an open and collaborative initiative. Whether you are part of the Security Alliance or not, we welcome your contributions! Help us build the documentation and improve security in the blockchain ecosystem.
 
