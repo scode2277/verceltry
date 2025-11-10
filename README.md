@@ -9,7 +9,7 @@
 security best practices maintained by the Security Alliance (SEAL). This repository powers a comprehensive, evolving
 security reference resource designed for practitioners and organizations to adopt, adapt, and contribute to.
 
-> ⚠️ **This is a work in progress.**  
+> ⚠️ **This is a work in progress.**   
 > The Security Frameworks are continuously evolving as we add, refine, and review content.  
 > *Check out our [Contributing Guide](https://github.com/security-alliance/frameworks/blob/develop/CONTRIBUTING.md) to
 > learn how you can help shape this resource — whether by fixing typos, suggesting improvements, or contributing new
