@@ -10,8 +10,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "docs:dev": "pnpm run generate-tags && pnpm run generate-indexes && vocs dev --host 0.0.0.0 --port 5173",
-    "docs:build": "pnpm run generate-tags && pnpm run generate-indexes && vocs build",
+    "docs:dev": "pnpm run generate-tags && pnpm run generate-indexes && pnpm run mermaid-wrapper && vocs dev --host 0.0.0.0 --port 5173",
+    "docs:build": "pnpm run generate-tags && pnpm run generate-indexes && pnpm run mermaid-wrapper && vocs build",
     "postdocs:build": "node utils/searchbar-indexing.js",
     "docs:preview": "vocs preview",
     "generate-tags": "node utils/tags-fetcher.js",
@@ -35,6 +35,9 @@
   },
   "packageManager": "pnpm@10.15.0",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.0.0",
+    "@aws-sdk/lib-storage": "^3.0.0",
+    "axios": "^1.6.0",
     "gray-matter": "^4.0.3",
     "just-install": "^2.0.2",
     "mermaid": "^11.11.0",
@@ -42,6 +45,8 @@
     "playwright": "^1.55.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-router-dom": "^7.8.1"
+    "react-router-dom": "^7.8.1",
+    "sharp": "^0.33.0",
+    "uuid": "^9.0.0"
   }
 }

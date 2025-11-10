@@ -1,0 +1,44 @@
+# build-preview.yml
+name: Build Preview Deployment
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, closed]
+
+jobs:
+  build-preview:
+    runs-on: ubuntu-latest
+    name: Build Preview Site and Upload Build Artifact
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+          run_install: false
+
+      # 3️⃣ Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      # 4️⃣ Install dependencies
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 5️⃣ Build site
+      - name: Build site
+        run: pnpm run docs:build
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+
+      # Uploads the build directory as a workflow artifact
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-build
+          path: docs/dist
