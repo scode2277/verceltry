@@ -1,4 +1,9 @@
 {
   "buildCommand": "pnpm run docs:build && pnpm run postdocs:build",
-  "outputDirectory": "docs/dist"
+  "outputDirectory": "docs/dist",
+  "git": {
+    "deploymentEnabled": {
+      "main": false
+    }
+  }
 }
