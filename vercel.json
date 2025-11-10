@@ -1,4 +1,4 @@
 {
-  "buildCommand": "bash vercel_build.sh",
+  "buildCommand": "pnpm run docs:build && pnpm run postdocs:build",
   "outputDirectory": "docs/dist"
 }
