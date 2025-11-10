@@ -12,9 +12,6 @@ const config = {
   description: 'Comprehensive security framework documentation for Web3 projects and blockchain security best practices.',
   logoUrl: 'https://frameworks-static.s3.us-east-2.amazonaws.com/images/logo/frameworks-full.svg',
   iconUrl: 'https://frameworks-static.s3.us-east-2.amazonaws.com/images/logo/favicon.svg',
-  ogImageUrl: {
-    '/': 'https://frameworks-static.s3.us-east-2.amazonaws.com/images/logo/frameworks-full.png'
-  },
   sidebar: [
     {
       text: 'Introduction',
@@ -411,7 +408,7 @@ function filterDevItems(items: any[]): any[] {
     }))
 }
 
-if (process.env.VERCEL_GIT_COMMIT_REF === 'main') {
+if (process.env.CF_PAGES_BRANCH === 'main' || process.env.VERCEL_GIT_COMMIT_REF === 'main') {
   config.sidebar = filterDevItems(config.sidebar)
 }
 
