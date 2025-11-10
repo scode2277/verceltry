@@ -301,9 +301,14 @@ async function main() {
   // Write the regenerated index to all discovered .vocs directories
   const payload = JSON.stringify(json);
   for (const target of payloadTargets) {
-    fs.mkdirSync(path.dirname(target), { recursive: true });  // Ensure directory exists
-    fs.writeFileSync(target, payload);
-    console.log(`Search index written (${filteredDocuments.length} sections): ${target}`);
+    try {
+      fs.mkdirSync(path.dirname(target), { recursive: true });  // Ensure directory exists
+      fs.writeFileSync(target, payload);
+      console.log(`Search index written (${filteredDocuments.length} sections): ${target}`);
+    } catch (err) {
+      // Skip targets that aren't writable (e.g., Vercel paths on CF Pages or vice versa)
+      console.log(`Skipping ${target}: ${err.code === 'EACCES' ? 'permission denied' : err.message}`);
+    }
   }
 }
 
