@@ -9,12 +9,12 @@ const path = require('path');
 // ============================================================================
 // CONFIGURATION CONSTANTS
 // ============================================================================
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB maximum file size
-const MAX_WIDTH = 4096;                  // Maximum image width in pixels
-const MAX_HEIGHT = 4096;                 // Maximum image height in pixels
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_WIDTH = 4096;
+const MAX_HEIGHT = 4096;
 
 // Allowed image formats
-const ALLOWED_FORMATS = ['jpeg', 'jpg', 'png', 'gif'];
+const ALLOWED_FORMATS = ['jpeg', 'jpg', 'png'];
 
 // Request timeout in milliseconds (30 seconds)
 const REQUEST_TIMEOUT = 30000;
@@ -37,13 +37,13 @@ const s3Client = new S3Client({
 // Downloads the image from the URL
 async function downloadImage(url) {
   console.log(`Downloading: ${url}`);
-  
+
   try {
     // All URLs are already validated by the workflow to be GitHub-hosted
     const headers = {
       'User-Agent': 'GitHub-Image-Upload-Bot/1.0'
     };
-    
+
     const response = await axios({
       url,
       method: 'GET',
@@ -53,16 +53,16 @@ async function downloadImage(url) {
       timeout: REQUEST_TIMEOUT,
       maxRedirects: 2,
       headers,
-      
+
       validateStatus: (status) => status >= 200 && status < 300
     });
 
     const buffer = Buffer.from(response.data);
-    
+
     if (buffer.length > MAX_FILE_SIZE) {
       throw new Error(`Image size (${(buffer.length / 1024 / 1024).toFixed(2)}MB) exceeds maximum allowed size (${MAX_FILE_SIZE / 1024 / 1024}MB)`);
     }
-    
+
     console.log(`✓ Downloaded ${(buffer.length / 1024).toFixed(2)}KB`);
     return buffer;
   } catch (error) {
@@ -70,9 +70,9 @@ async function downloadImage(url) {
       const status = error.response.status;
 
       if (status === 400 || status === 404) {
-        if (url.includes('private-user-images.githubusercontent.com') || 
-            url.includes('user-images.githubusercontent.com')) {
-          
+        if (url.includes('private-user-images.githubusercontent.com') ||
+          url.includes('user-images.githubusercontent.com')) {
+
           const hasJWT = url.includes('jwt=');
           if (hasJWT) {
             throw new Error('HTTP 400: Image URL expired or invalid. GitHub private image URLs expire within 5-15 minutes. Please copy a fresh URL directly from the PR comment and ensure the workflow runs quickly after posting the /img-bot comment.');
@@ -97,7 +97,7 @@ async function validateImage(buffer) {
 
   try {
     const metadata = await sharp(buffer).metadata();
-    
+
     console.log('Image metadata:', {
       format: metadata.format,
       width: metadata.width,
@@ -131,16 +131,16 @@ async function validateImage(buffer) {
 // Format: timestamp_uuid_hash_originalname.ext
 function generateUniqueFilename(originalUrl, format) {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  
+
   const uniqueId = uuidv4().split('-')[0];
-  
+
   const hash = crypto.createHash('md5').update(originalUrl).digest('hex').substring(0, 8);
-  
+
   let originalName = 'image';
   try {
     const urlPath = new URL(originalUrl).pathname;
     const basename = path.basename(urlPath, path.extname(urlPath));
-    
+
     if (basename && basename !== '' && basename.length < 50) {
       originalName = basename.replace(/[^a-zA-Z0-9-_]/g, '-');
     }
@@ -174,7 +174,7 @@ async function uploadToS3(buffer, filename, contentType) {
     const region = process.env.AWS_REGION;
     const bucket = process.env.AWS_S3_BUCKET;
     const publicUrl = `https://${bucket}.s3.${region}.amazonaws.com/images/${filename}`;
-    
+
     console.log(`✓ Uploaded to S3: ${publicUrl}`);
     return publicUrl;
   } catch (error) {
@@ -189,14 +189,14 @@ async function uploadToS3(buffer, filename, contentType) {
 async function processImage(url) {
   try {
     const buffer = await downloadImage(url);
-    
+
     const metadata = await validateImage(buffer);
-    
+
     const filename = generateUniqueFilename(url, metadata.format);
-    
+
     const s3Url = await uploadToS3(
-      buffer, 
-      filename, 
+      buffer,
+      filename,
       `image/${metadata.format}`
     );
 
@@ -229,15 +229,15 @@ async function processImage(url) {
 async function main() {
   const fs = require('fs');
   let urls;
-  
+
   try {
     const rawData = fs.readFileSync('urls.json', 'utf8');
     urls = JSON.parse(rawData);
-    
+
     if (!Array.isArray(urls)) {
       throw new Error('urls.json does not contain an array');
     }
-    
+
     console.log(`Processing ${urls.length} image(s)...`);
   } catch (error) {
     console.error('Failed to read/parse urls.json:', error.message);
@@ -255,10 +255,10 @@ async function main() {
   for (let i = 0; i < urls.length; i++) {
     const url = urls[i];
     console.log(`\n[${i + 1}/${urls.length}] Processing: ${url.substring(0, 60)}...`);
-    
+
     const result = await processImage(url);
     results.push(result);
-    
+
     if (result.success) {
       console.log(`✓ Success: ${result.filename}`);
     } else {
@@ -268,7 +268,7 @@ async function main() {
 
   // Always output RESULTS, even if empty (for workflow parsing)
   console.log('\nRESULTS:', JSON.stringify(results, null, 2));
-  
+
   // Exit with code 1 only if all images failed
   const allFailed = results.length > 0 && results.every(r => !r.success);
   if (allFailed) {

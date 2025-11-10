@@ -16,7 +16,7 @@ jobs:
     concurrency:
       group: upload-images-${{ github.event.issue.number }}
       cancel-in-progress: false
-    
+
     # Conditional execution: Only run if ALL conditions are met:
     # 1. Comment is on a pull request (not a regular issue)
     # 2. Comment starts with '/img-bot' command
@@ -24,12 +24,12 @@ jobs:
     if: |
       github.event.issue.pull_request &&
       startsWith(github.event.comment.body, '/img-bot') &&
-      (github.event.comment.author_association == 'OWNER' || 
+      (github.event.comment.author_association == 'OWNER' ||
        github.event.comment.author_association == 'MEMBER' ||
        github.event.comment.author_association == 'COLLABORATOR')
-    
+
     runs-on: ubuntu-latest
-    
+
     steps:
       # Step 1: Acknowledge the command by adding a reaction
       - name: React to command
@@ -119,22 +119,22 @@ jobs:
             echo "::error::AWS_ACCESS_KEY_ID secret is not configured"
             exit 1
           fi
-          
+
           if [ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]; then
             echo "::error::AWS_SECRET_ACCESS_KEY secret is not configured"
             exit 1
           fi
-          
+
           if [ -z "${{ secrets.AWS_REGION }}" ]; then
             echo "::error::AWS_REGION secret is not configured"
             exit 1
           fi
-          
+
           if [ -z "${{ secrets.AWS_S3_BUCKET }}" ]; then
             echo "::error::AWS_S3_BUCKET secret is not configured"
             exit 1
           fi
-          
+
           echo "✓ All AWS secrets are configured"
 
       # Step 4: Checkout repository
@@ -145,13 +145,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-      
+          node-version: "20"
+
       # Step 6: Install pnpm
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.15.0 
+          version: 10.15.0
           run_install: false
 
       # Step 7: Cache pnpm dependencies
@@ -184,7 +184,7 @@ jobs:
             const urls = JSON.parse(process.env.URLS_JSON);
 
             fs.writeFileSync('urls.json', JSON.stringify(urls, null, 2));
-            
+
             console.log(`Wrote ${urls.length} URL(s) to urls.json`);
 
       # Step 10: Process and upload images
@@ -197,46 +197,36 @@ jobs:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Run script (continue even if it fails so we can extract RESULTS)
+          # Run script and capture output
           set +e
           node .github/scripts/process-images.js > output.log 2>&1
           EXIT_CODE=$?
           set -e
-          
-          echo "Script exited with code: $EXIT_CODE"
-          echo "Extracting RESULTS from output.log..."
-          
+
+          # Extract RESULTS from script output
           RESULTS=$(perl -0777 -pe 's/.*RESULTS:\s*//s' output.log 2>/dev/null || echo '')
-          
           RESULTS=$(echo "$RESULTS" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-          
+
+          # Validate and write results
           if [ -z "$RESULTS" ] || ! echo "$RESULTS" | grep -q '^\['; then
-            echo "⚠ Warning: No valid RESULTS found or invalid format"
-            echo "Preview of output.log tail:"
+            echo "::error::Failed to extract valid RESULTS from script output"
+            echo "Script output:"
             tail -20 output.log
-            RESULTS='[]'
-          fi
-          
-          echo "$RESULTS" > results.json
-          
-          if [ -f results.json ]; then
-            FILE_SIZE=$(wc -c < results.json | tr -d ' ')
-            echo "✓ results.json created: $FILE_SIZE bytes"
-            echo "Preview: $(head -c 200 results.json)..."
-            
-            if command -v jq &> /dev/null; then
-              if jq empty results.json 2>/dev/null; then
-                echo "✓ results.json contains valid JSON"
-              else
-                echo "⚠ Warning: results.json may not be valid JSON"
-              fi
-            fi
-          else
-            echo "❌ Error: results.json was not created!"
             exit 1
           fi
- 
-          cat output.log
+
+          echo "$RESULTS" > results.json
+
+          if [ ! -f results.json ]; then
+            echo "::error::Failed to create results.json"
+            exit 1
+          fi
+
+          # Show script output for debugging (only if script failed)
+          if [ "$EXIT_CODE" -ne 0 ]; then
+            echo "Script output:"
+            cat output.log
+          fi
 
       # Step 11: Comment results back to PR and check for failures
       - name: Comment results and check failures
@@ -274,23 +264,23 @@ jobs:
               });
               throw error;
             }
-            
+
             function sanitizeUrl(url) {
               if (!url) return '';
               return url.replace(/[<>]/g, '');
             }
 
             // Build comment body with results
-            let commentBody = '## 🖼️ Image Upload Results\n\n';
+            let commentBody = '## 🖼️ Image(s) Upload Results\n\n';
             commentBody += '**Next steps**: Copy the permanent S3 URLs below and replace the temporary URLs in the PR files.\n\n';
-            
+
             // Separate successful and failed uploads
             const successful = results.filter(r => r.success);
             const failed = results.filter(r => !r.success);
-            
+
             // Add successful uploads section
             if (successful.length > 0) {
-              commentBody += '### ✅ Successfully Uploaded\n\n';
+              commentBody += '### ✅ Uploaded\n\n';
               successful.forEach((result, index) => {
                 const safeS3Url = sanitizeUrl(result.s3Url);
                 
@@ -298,7 +288,7 @@ jobs:
                 commentBody += '---\n\n';
               });
             }
-            
+
             // Add failed uploads section
             if (failed.length > 0) {
               commentBody += '### ❌ Failed Uploads\n\n';
@@ -308,10 +298,10 @@ jobs:
                 commentBody += `   **Error**: ${result.error}\n\n`;
               });
             }
-            
+
             // Add summary
             commentBody += `\n*Processed ${results.length} image(s): ${successful.length} successful, ${failed.length} failed*`;
-            
+
             // Post comment to PR
             await github.rest.issues.createComment({
               owner: context.repo.owner,
@@ -319,7 +309,7 @@ jobs:
               issue_number: context.payload.issue.number,
               body: commentBody
             });
-            
+
             // Add reaction to original comment to indicate completion
             await github.rest.reactions.createForIssueComment({
               owner: context.repo.owner,
@@ -336,22 +326,22 @@ jobs:
             echo "::error::Results file not found"
             exit 1
           fi
-          
+
           # Count failed uploads using jq (JSON processor)
           FAILED=$(jq '[.[] | select(.success == false)] | length' results.json)
-          
+
           # If any uploads failed, exit with error
           if [ "$FAILED" -gt 0 ]; then
             echo "::error::$FAILED image(s) failed to upload"
             exit 1
           fi
-          
+
           echo "✓ All images uploaded successfully!"
 
       # Step 13: Cleanup temporary files
       - name: Cleanup temporary files
         if: always()
         run: |
-          # Remove temporary files (but not the script file from .github/scripts/)
+          # Remove temporary files
           rm -f urls.json output.log results.json
           echo "✓ Cleaned up temporary files"
