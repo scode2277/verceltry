@@ -24,7 +24,7 @@ jobs:
     if: |
       github.event.issue.pull_request &&
       startsWith(github.event.comment.body, '/img-bot') &&
-       github.event.comment.author_association == 'COLLABORATOR')
+       github.event.comment.author_association == 'COLLABORATOR'
 
     runs-on: ubuntu-latest
 
