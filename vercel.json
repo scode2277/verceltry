@@ -1,15 +1,10 @@
 {
-  "buildCommand": "bash vercel_build.sh",
+  "buildCommand": "pnpm run docs:build && pnpm run postdocs:build",
   "outputDirectory": "docs/dist",
   "rewrites": [
-    { "source": "", "destination": "/intro/introduction" },
-    { "source": "/", "destination": "/intro/introduction" },
-    { "source": "/intro", "destination": "/intro/introduction/index.html" },
-    { "source": "/intro/", "destination": "/intro/introduction/index.html" },
-    { "source": "/contribute", "destination": "/contribute/contributing" },
-    { "source": "/contribute/", "destination": "/contribute/contributing" },
-    { "source": "/:section", "destination": "/:section/overview" },
-    { "source": "/:section/overview", "destination": "/:section/README" },
-    { "source": "/:section/", "destination": "/:section/overview" }
+    {
+      "source": "/:match*",
+      "destination": "/:match/overview"
+    }
   ]
 }
