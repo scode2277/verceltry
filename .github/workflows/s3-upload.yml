@@ -24,13 +24,36 @@ jobs:
     if: |
       github.event.issue.pull_request &&
       startsWith(github.event.comment.body, '/img-bot') &&
-      (github.event.comment.author_association == 'OWNER' ||
-       github.event.comment.author_association == 'MEMBER' ||
        github.event.comment.author_association == 'COLLABORATOR')
 
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check collaborator permission
+        id: check-collaborator
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const username = context.payload.comment.user.login;
+            const assoc = context.payload.comment.author_association;
+
+            // Get their permission level via API
+            const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner,
+              repo,
+              username,
+            });
+
+            const allowed = ['admin', 'maintain', 'write'];
+            const perm = data.permission;
+
+            if (!allowed.includes(perm)) {
+              core.setFailed(`User ${username} has insufficient permissions (${perm}).`);
+            } else {
+              console.log(`✅ User ${username} allowed (${perm} permission).`);
+            }
+
       # Step 1: Acknowledge the command by adding a reaction
       - name: React to command
         uses: actions/github-script@v7
@@ -272,7 +295,7 @@ jobs:
 
             // Build comment body with results
             let commentBody = '## 🖼️ Image(s) Upload Results\n\n';
-            commentBody += '**Next steps**: Copy the permanent S3 URLs below and replace the temporary URLs in the PR files.\n\n';
+            commentBody += '**Next steps**: Copy the S3 URLs below and add them in the PR files.\n\n';
 
             // Separate successful and failed uploads
             const successful = results.filter(r => r.success);
