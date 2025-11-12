@@ -105,7 +105,7 @@ async function validateImage(buffer) {
       size: `${(buffer.length / 1024).toFixed(2)}KB`
     });
 
-    // Validate format (security: only allow safe image formats)
+    // Validate format
     if (!ALLOWED_FORMATS.includes(metadata.format)) {
       throw new Error(`Invalid format: ${metadata.format}. Allowed: ${ALLOWED_FORMATS.join(', ')}`);
     }
